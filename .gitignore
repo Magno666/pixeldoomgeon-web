@@ -1,0 +1,9 @@
+# Salida del compilador de TeaVM y cache de Gradle.
+build/
+.gradle/
+
+# Los dos jar son entrada, no fuente:
+#   juego.jar  sale de compilar el fork (ver README).
+#   json.jar   se baja de Maven Central.
+# Pesan 2.3 MB juntos y se regeneran; no van al historial.
+libs/*.jar

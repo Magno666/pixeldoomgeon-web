@@ -1,0 +1,37 @@
+// Compila el juego a JavaScript. Proyecto aparte a proposito: el de
+// Android no se toca, y aqui se anaden los sustitutos de las clases de
+// Android que el juego usa (35 en total, medidas).
+plugins {
+    id 'java'
+    id 'org.teavm' version '0.15.0'
+}
+
+repositories { mavenCentral() }
+
+dependencies {
+    // El juego, ya compilado a bytecode con source 8: no se puede compilar
+    // desde fuente aqui porque usa `_` como nombre de variable, reservado
+    // desde Java 9, y TeaVM exige 17 para lo suyo.
+    implementation files('libs/juego.jar')
+    implementation files('libs/json.jar')
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
+    }
+}
+
+teavm.js {
+    mainClass = 'web.Main'
+    targetFileName = 'juego.js'
+    obfuscated = false
+    sourceMap = true
+}
