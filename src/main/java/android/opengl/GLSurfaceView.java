@@ -157,7 +157,6 @@ public class GLSurfaceView extends View {
         });
     }
 
-    /** El canvas sigue a la ventana; si cambia, se avisa al juego. */
     /**
      * El juego cree que tiene toda la ventana, y pone botones a un par de
      * pixeles del borde -- el "Okay!" de la pantalla de bienvenida vive en
@@ -183,6 +182,27 @@ public class GLSurfaceView extends View {
         lienzo.setHeight(alto);
         anchoPrevio = ancho;
         altoPrevio = alto;
+
+        // Game.onSurfaceChanged (el metodo del juego, sin tocar) solo pide
+        // reiniciar la escena cuando ShatteredPixelDungeon.immersiveModeChanged
+        // esta prendido -- pensado para cuando el modo inmersivo aparece o
+        // desaparece, que en Android tambien cambia el tamano de la
+        // superficie. En el navegador el tamano cambia por otras razones
+        // (girar el telefono, que Chrome acomode la barra) sin que
+        // immersiveModeChanged se entere, asi que la escena se queda
+        // dibujando con las dimensiones viejas -- la mitad de la pantalla
+        // con juego, negro el resto. Confirmado con el emulador de la otra
+        // sesion: cargar en vertical y girar a horizontal deja el buffer en
+        // el tamano nuevo pero el dibujo en el viejo.
+        //
+        // No hace falta tocar Game.java: ShatteredPixelDungeon.immerse(...)
+        // ya es publico y ya hace justo esto como efecto secundario de
+        // aplicar la MISMA preferencia que ya estaba (no cambia nada del
+        // modo inmersivo, solo dispara el aviso que el juego ya sabe
+        // atender).
+        com.github.dachhack.sprout.ShatteredPixelDungeon.immerse(
+            com.github.dachhack.sprout.ShatteredPixelDungeon.immersed());
+
         renderer.onSurfaceChanged(null, ancho, alto);
     }
 
