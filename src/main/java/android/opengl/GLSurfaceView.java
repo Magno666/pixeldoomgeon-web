@@ -123,6 +123,12 @@ public class GLSurfaceView extends View {
                     diag("cuadros=" + cuadros
                         + " errGL=" + GLES20.erroresGL + "/" + GLES20.ultimoError
                         + " ent=" + web.Entrada.eventos
+                        + " win=" + Window.current().getInnerWidth() + "x" + Window.current().getInnerHeight()
+                        + " dpr=" + Window.current().getDevicePixelRatio()
+                        + " borde=" + java.util.Arrays.toString(ultimoBorde)
+                        + " disp=" + ultimoDispW + "x" + ultimoDispH
+                        + " rect=" + java.util.Arrays.toString(rectLienzo(lienzo))
+                        + " canvas=" + anchoPrevio + "x" + altoPrevio
                         + " " + web.Diagnostico.nivel());
                 }
                 Window.requestAnimationFrame(this);
