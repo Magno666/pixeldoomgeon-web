@@ -178,7 +178,6 @@ public class GLSurfaceView extends View {
         int alto  = (int) (dispH * dpr);
         posicionar(lienzo, despX, despY, dispW, dispH);
         if (ancho == anchoPrevio && alto == altoPrevio) return;
-        boolean anchoCambio = ancho != anchoPrevio;
         lienzo.setWidth(ancho);
         lienzo.setHeight(alto);
         anchoPrevio = ancho;
@@ -191,10 +190,7 @@ public class GLSurfaceView extends View {
         // superficie. En el navegador el tamano cambia por otras razones
         // (girar el telefono, que Chrome acomode la barra) sin que
         // immersiveModeChanged se entere, asi que la escena se queda
-        // dibujando con las dimensiones viejas -- la mitad de la pantalla
-        // con juego, negro el resto. Confirmado con el emulador de la otra
-        // sesion: cargar en vertical y girar a horizontal deja el buffer en
-        // el tamano nuevo pero el dibujo en el viejo.
+        // dibujando con las dimensiones viejas.
         //
         // No hace falta tocar Game.java: ShatteredPixelDungeon.immerse(...)
         // ya es publico y ya hace justo esto como efecto secundario de
@@ -202,17 +198,22 @@ public class GLSurfaceView extends View {
         // modo inmersivo, solo dispara el aviso que el juego ya sabe
         // atender).
         //
-        // Solo si cambia el ANCHO. Rehacer la escena a media partida
-        // recrea inventario, mapa, apuntado -- barato en un cambio de
-        // piso (el juego ya lo hace en cada uno) pero mejor no dispararlo
-        // por algo que no lo necesita: la barra de direcciones de Chrome
-        // en Android solo mueve el alto, no el ancho, y esta pagina no
-        // hace scroll asi que no deberia moverse durante el juego, pero
-        // mejor no arriesgarse a un reset de mas si acaso.
-        if (anchoCambio) {
-            com.github.dachhack.sprout.ShatteredPixelDungeon.immerse(
-                com.github.dachhack.sprout.ShatteredPixelDungeon.immersed());
-        }
+        // Se dispara con CUALQUIER cambio, ancho o alto -- se probo
+        // limitarlo solo al ancho (para no tocar una ventana abierta si
+        // solo se movia la barra de direcciones de Chrome) y eso dejo un
+        // bug peor: si solo cambia el alto, la escena vieja se queda
+        // pegada arriba con una franja negra abajo, la diferencia exacta
+        // de alto. Confirmado con el emulador de la otra sesion, columna
+        // por columna del framebuffer.
+        //
+        // Queda el riesgo de que reiniciar a media partida cierre una
+        // ventana abierta (Window cuelga de la escena como hijo; al
+        // recrearla no sobrevive) si el cambio de tamano no fue un giro
+        // -- pero en Android nativo girar el telefono igual reinicia la
+        // Activity entera y cierra cualquier ventana, asi que no es un
+        // riesgo nuevo, es el mismo que ya existe.
+        com.github.dachhack.sprout.ShatteredPixelDungeon.immerse(
+            com.github.dachhack.sprout.ShatteredPixelDungeon.immersed());
 
         renderer.onSurfaceChanged(null, ancho, alto);
     }
