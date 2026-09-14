@@ -120,16 +120,10 @@ public class GLSurfaceView extends View {
                 // encontraron las texturas vacias y el listener sin conectar,
                 // asi que se quedan -- pero no en el titulo de la pestana.
                 if (cuadros % 30 == 0 && conDiagnostico()) {
-                    diag("borde=" + java.util.Arrays.toString(ultimoBorde)
-                        + " disp=" + ultimoDispW + "x" + ultimoDispH
-                        + " rect=" + java.util.Arrays.toString(rectLienzo(lienzo))
-                        + " cuadros=" + cuadros
-                        + " dibujos=" + GLES20.dibujos
-                        + " indices=" + GLES20.indices_total
-                        + " texturas=" + GLES20.texturasSubidas
+                    diag("cuadros=" + cuadros
                         + " errGL=" + GLES20.erroresGL + "/" + GLES20.ultimoError
                         + " ent=" + web.Entrada.eventos
-                        + " canvas=" + anchoPrevio + "x" + altoPrevio);
+                        + " " + web.Diagnostico.nivel());
                 }
                 Window.requestAnimationFrame(this);
             }

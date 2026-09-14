@@ -38,7 +38,7 @@ public class BitmapFactory {
     }
 
     public static Bitmap decodeResource(android.content.res.Resources res,
-                                        Integer id, Options opts) {
-        return decodeResource(res, id == null ? 0 : id.intValue());
+                                        int id, Options opts) {
+        return decodeResource(res, id);
     }
 }
