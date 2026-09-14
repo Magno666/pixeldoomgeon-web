@@ -14,6 +14,13 @@ dependencies {
     // desde Java 9, y TeaVM exige 17 para lo suyo.
     implementation files('libs/juego.jar')
     implementation files('libs/json.jar')
+
+    // Solo para webbuild.PintoresReflexion: registra que Room.Type puede
+    // pintar cuartos por reflexion, cosa que TeaVM no adivina solo. Es un
+    // gancho de compilacion (org.teavm.classlib.ReflectionSupplier, via
+    // META-INF/services) -- nunca corre en el navegador, compileOnly
+    // porque no debe entrar en el JS de salida.
+    compileOnly 'org.teavm:teavm-core:0.15.0'
 }
 
 java {
