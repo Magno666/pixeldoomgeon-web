@@ -178,6 +178,7 @@ public class GLSurfaceView extends View {
         int alto  = (int) (dispH * dpr);
         posicionar(lienzo, despX, despY, dispW, dispH);
         if (ancho == anchoPrevio && alto == altoPrevio) return;
+        boolean anchoCambio = ancho != anchoPrevio;
         lienzo.setWidth(ancho);
         lienzo.setHeight(alto);
         anchoPrevio = ancho;
@@ -200,8 +201,18 @@ public class GLSurfaceView extends View {
         // aplicar la MISMA preferencia que ya estaba (no cambia nada del
         // modo inmersivo, solo dispara el aviso que el juego ya sabe
         // atender).
-        com.github.dachhack.sprout.ShatteredPixelDungeon.immerse(
-            com.github.dachhack.sprout.ShatteredPixelDungeon.immersed());
+        //
+        // Solo si cambia el ANCHO. Rehacer la escena a media partida
+        // recrea inventario, mapa, apuntado -- barato en un cambio de
+        // piso (el juego ya lo hace en cada uno) pero mejor no dispararlo
+        // por algo que no lo necesita: la barra de direcciones de Chrome
+        // en Android solo mueve el alto, no el ancho, y esta pagina no
+        // hace scroll asi que no deberia moverse durante el juego, pero
+        // mejor no arriesgarse a un reset de mas si acaso.
+        if (anchoCambio) {
+            com.github.dachhack.sprout.ShatteredPixelDungeon.immerse(
+                com.github.dachhack.sprout.ShatteredPixelDungeon.immersed());
+        }
 
         renderer.onSurfaceChanged(null, ancho, alto);
     }
