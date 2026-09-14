@@ -42,7 +42,28 @@ public class GLSurfaceView extends View {
     private double ultimoDispW, ultimoDispH;
     private int cuadros = 0;
 
-    @org.teavm.jso.JSBody(params = "msg", script = "document.title = msg; console.log(msg);")
+    // Chrome de Android no enseña document.title en ningun lado visible,
+    // asi que una captura del telefono nunca iba a traer los numeros --
+    // por eso, ademas del titulo, esto pinta un recuadro fijo en pantalla
+    // cuando la URL pide ?diag. La otra sesion lo señalo tras medir en el
+    // emulador y no poder ver el render (bug del propio emulador, no del
+    // puerto): sin esto, cualquier captura del telefono de Leonel iba a
+    // seguir sin decir nada.
+    @org.teavm.jso.JSBody(params = "msg", script =
+        "document.title = msg; console.log(msg);" +
+        "if (location.search.indexOf('diag') >= 0) {" +
+        "  var d = document.getElementById('__pdDiagVis');" +
+        "  if (!d) {" +
+        "    d = document.createElement('div');" +
+        "    d.id = '__pdDiagVis';" +
+        "    d.style.cssText = 'position:fixed;left:0;top:0;z-index:999;" +
+        "      background:rgba(0,0,0,.78);color:#4fdc4f;" +
+        "      font:11px/1.4 monospace;padding:4px 6px;" +
+        "      pointer-events:none;white-space:pre-wrap;max-width:100vw';" +
+        "    document.body.appendChild(d);" +
+        "  }" +
+        "  d.textContent = msg;" +
+        "}")
     private static native void diag(String msg);
 
     public GLSurfaceView(Context contexto) { super(contexto); }
