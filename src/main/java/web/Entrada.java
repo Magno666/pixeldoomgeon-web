@@ -78,8 +78,24 @@ public final class Entrada {
         "  var ey = b.height > 0 ? c.height / b.height : 1;" +
         "  return [(cx - b.left) * ex, (cy - b.top) * ey];" +
         "}" +
+        // El "soltar" se escucha en toda la ventana (no solo el canvas) para
+        // no perderlo si el arrastre termina fuera de el. Eso significa que
+        // puede llegar un soltar sin que el juego haya visto el bajar --
+        // por ejemplo si el bajar cayo en otro elemento encima del canvas
+        // (el aviso de "gira el telefono" antes de arreglarle el
+        // pointer-events, o el enlace de volver). Touchscreen.processTouchEvents
+        // no lo espera: un soltar huerfano tira null.up() y revienta el
+        // motor de toques entero -- la pantalla se queda congelada en lo
+        // ultimo que se alcanzo a dibujar, que si coincide con la pantalla
+        // de carga entre niveles se ve identico a un cuelgue de verdad.
+        // abajo lleva la cuenta de si el juego de verdad vio el bajar, y
+        // solo entonces se manda soltar o mover.
+        "var abajo = false;" +
         "function raton(accion) { return function (e) {" +
+        "  if (accion === 0) abajo = true;" +
+        "  if (!abajo) return;" +
         "  if (accion === 2 && e.buttons === 0) return;" +
+        "  if (accion === 1) abajo = false;" +
         "  var p = aLienzo(e.clientX, e.clientY);" +
         "  q.push(accion, 1, 0, p[0], p[1]);" +
         "}; }" +
