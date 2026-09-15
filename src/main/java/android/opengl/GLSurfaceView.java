@@ -51,7 +51,7 @@ public class GLSurfaceView extends View {
     // seguir sin decir nada.
     @org.teavm.jso.JSBody(params = "msg", script =
         "document.title = msg; console.log(msg);" +
-        "if (location.search.indexOf('diag') >= 0) {" +
+        "if (true) {" +
         "  var d = document.getElementById('__pdDiagVis');" +
         "  if (!d) {" +
         "    d = document.createElement('div');" +
@@ -242,8 +242,13 @@ public class GLSurfaceView extends View {
         "var r = c.getBoundingClientRect(); return [r.left,r.top,r.width,r.height];")
     private static native double[] rectLienzo(HTMLCanvasElement c);
 
-    /** Lo llama web.Entrada cuando el navegador manda un toque. */
-    @org.teavm.jso.JSBody(script = "return location.search.indexOf('diag') >= 0;")
+    // Temporal, mientras se caza el cuelgue en el telefono de Leonel: antes
+    // pedia ?diag en la URL, pero eso significa acordarse de escribirlo
+    // cada vez que abre el enlace de nuevo, y ya se le olvido mas de una
+    // vez. Siempre encendido por ahora -- volver a gatear con ?diag en
+    // cuanto esto quede resuelto, el recuadro no deberia verlo un jugador
+    // cualquiera.
+    @org.teavm.jso.JSBody(script = "return true;")
     private static native boolean conDiagnostico();
 
     public boolean entregarToque(MotionEvent e) { return onTouchEvent(e); }
