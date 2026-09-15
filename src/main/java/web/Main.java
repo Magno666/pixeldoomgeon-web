@@ -25,6 +25,7 @@ public final class Main {
     private static void arrancar() {
         try {
             MantenerVivo.tocar();
+            MantenerGuardables.tocar();
             Arranque.encender();
             // Sin esto el juego dibuja perfectamente debajo de una pantalla
             // de carga opaca que nunca se va. Es el mismo fallo que ya

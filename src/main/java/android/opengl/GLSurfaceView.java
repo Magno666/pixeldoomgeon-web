@@ -120,7 +120,7 @@ public class GLSurfaceView extends View {
         try {
             renderer.onSurfaceCreated(null, null);
         } catch (Throwable t) {
-            diag("REVENTO en onSurfaceCreated: " + t);
+            diag("REVENTO en onSurfaceCreated: " + conCausas(t));
             return;
         }
         ajustarTamano();
@@ -133,7 +133,7 @@ public class GLSurfaceView extends View {
                     web.Entrada.bombear(GLSurfaceView.this);
                     renderer.onDrawFrame(null);
                 } catch (Throwable t) {
-                    diag("REVENTO en el frame " + cuadros + ": " + t);
+                    diag("REVENTO en el frame " + cuadros + ": " + conCausas(t));
                     return;          // no seguir pintando sobre el error
                 }
                 cuadros++;
@@ -241,6 +241,25 @@ public class GLSurfaceView extends View {
     @org.teavm.jso.JSBody(params = "c", script =
         "var r = c.getBoundingClientRect(); return [r.left,r.top,r.width,r.height];")
     private static native double[] rectLienzo(HTMLCanvasElement c);
+
+    /**
+     * El mensaje de arriba solo dice la excepcion de mas afuera, y el juego
+     * envuelve las suyas: InterlevelScene atrapa lo que sea que falle al
+     * generar un piso y lo relanza como "fatal error occured while moving
+     * between floors", con la de verdad adentro como causa. Sin recorrer la
+     * cadena, el aviso no dice nada util.
+     */
+    private static String conCausas(Throwable t) {
+        StringBuilder sb = new StringBuilder();
+        Throwable actual = t;
+        for (int i = 0; actual != null && i < 5; i++) {
+            if (i > 0) sb.append("  <- ");
+            sb.append(actual);
+            Throwable causa = actual.getCause();
+            actual = (causa == actual) ? null : causa;
+        }
+        return sb.toString();
+    }
 
     // Temporal, mientras se caza el cuelgue en el telefono de Leonel: antes
     // pedia ?diag en la URL, pero eso significa acordarse de escribirlo
