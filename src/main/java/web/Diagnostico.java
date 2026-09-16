@@ -126,6 +126,98 @@ public final class Diagnostico {
                 } catch (Throwable t) {
                     reportar("PASO QUE REVENTO -> " + t);
                 }
+            } else if ("soltarCarne".equals(cmd)) {
+                celdaPrueba = vecinoPisable();
+                if (celdaPrueba < 0) { reportar("sin vecino pisable"); return; }
+                Dungeon.level.drop(
+                    new com.github.dachhack.sprout.items.food.MysteryMeat(),
+                    celdaPrueba);
+                reportar("carne en " + celdaPrueba
+                    + " heroe=" + Dungeon.hero.pos
+                    + " mochila=" + mochila()
+                    + " monton=" + (Dungeon.level.heaps.get(celdaPrueba) != null));
+            } else if ("pisarCarne".equals(cmd)) {
+                // Exactamente lo que hace el stick: un paso a la casilla.
+                reportar("pisarCarne: handleCell(" + celdaPrueba + ")"
+                    + " listo=" + (Dungeon.hero != null && Dungeon.hero.ready)
+                    + " ventana=" + GameScene.windowOpen());
+                GameScene.handleCell(celdaPrueba);
+            } else if ("verMochila".equals(cmd)) {
+                reportar("mochila=" + mochila()
+                    + " heroe=" + Dungeon.hero.pos
+                    + " celdaPrueba=" + celdaPrueba
+                    + " monton sigue=" + (Dungeon.level.heaps.get(celdaPrueba) != null)
+                    + " accion=" + Dungeon.hero.curAction
+                    + " listo=" + Dungeon.hero.ready);
+            } else if ("apuntarCarne".equals(cmd)) {
+                // Poner el ojo mirando a la carne, como haria el jugador
+                // antes de tocarla.
+                if (celdaPrueba < 0) { reportar("no hay celda de prueba"); return; }
+                apuntarA(celdaPrueba);
+            } else if ("rayoCarne".equals(cmd)) {
+                // Y ahora: de todos los pixeles de la pantalla, cuantos
+                // devuelven la casilla de la carne. Si son cero, tocarla es
+                // imposible por mas que se vea.
+                if (celdaPrueba < 0) { reportar("no hay celda de prueba"); return; }
+                int aciertos = 0, total = 0, centro = -1;
+                float an = com.watabou.noosa.Game.width;
+                float al = com.watabou.noosa.Game.height;
+                for (int ix = 1; ix < 20; ix++) {
+                    for (int iy = 1; iy < 20; iy++) {
+                        float sx = an * ix / 20f, sy = al * iy / 20f;
+                        int c = com.github.dachhack.sprout.FirstPerson
+                            .screenToCell(sx, sy);
+                        total++;
+                        if (c == celdaPrueba) aciertos++;
+                    }
+                }
+                centro = com.github.dachhack.sprout.FirstPerson
+                    .screenToCell(an / 2f, al / 2f);
+                reportar("rayoCarne: objetivo=" + celdaPrueba
+                    + " centro devuelve=" + centro
+                    + " aciertos=" + aciertos + "/" + total
+                    + (aciertos == 0 ? "  <<< IMPOSIBLE DE TOCAR" : ""));
+            } else if ("darPergamino".equals(cmd)) {
+                com.github.dachhack.sprout.items.scrolls.ScrollOfUpgrade sou =
+                    new com.github.dachhack.sprout.items.scrolls.ScrollOfUpgrade();
+                sou.identify();
+                sou.collect();
+                reportar("pergamino dado. " + estadoArma());
+            } else if ("leerPergamino".equals(cmd)) {
+                com.github.dachhack.sprout.items.scrolls.ScrollOfUpgrade sou =
+                    Dungeon.hero.belongings.getItem(
+                        com.github.dachhack.sprout.items.scrolls.ScrollOfUpgrade.class);
+                if (sou == null) { reportar("no hay pergamino"); return; }
+                sou.execute(Dungeon.hero, "READ");
+                reportar("leerPergamino: ventana abierta="
+                    + GameScene.windowOpen() + ". " + estadoArma());
+            } else if ("verArma".equals(cmd)) {
+                reportar("verArma: " + estadoArma());
+            } else if ("verEscalera".equals(cmd)) {
+                // Dos casillas antes de la escalera, en la direccion donde
+                // de verdad se pueda estar: si el pasillo dobla, mirar
+                // desde cinco casillas atras solo enseña pared.
+                int w = com.github.dachhack.sprout.levels.Level.getWidth();
+                int salida = Dungeon.level.exit;
+                int[] dirs = { w, -w, 1, -1 };
+                int desde = -1;
+                for (int d : dirs) {
+                    int uno = salida + d, dos = salida + 2 * d;
+                    if (dos > 0 && dos < Dungeon.level.map.length
+                        && com.github.dachhack.sprout.levels.Level.passable[uno]
+                        && com.github.dachhack.sprout.levels.Level.passable[dos]) {
+                        desde = dos; break;
+                    }
+                }
+                if (desde < 0) { reportar("sin sitio desde donde mirar"); return; }
+                Dungeon.hero.pos = desde;
+                if (Dungeon.hero.sprite != null) {
+                    Dungeon.hero.sprite.place(desde);
+                }
+                Dungeon.observe();
+                celdaPrueba = salida;
+                reportar("verEscalera: salida=" + salida + " mirando desde "
+                    + desde + " (apuntar en la siguiente orden)");
             } else if ("caer".equals(cmd)) {
                 // El reporte de Leonel, tal cual: tirarse a un chasm.
                 reportar("orden caer: desde " + Dungeon.hero.pos
@@ -136,6 +228,62 @@ public final class Diagnostico {
         } catch (Throwable t) {
             reportar("orden " + cmd + " revento: " + t);
         }
+    }
+
+    private static int celdaPrueba = -1;
+
+    private static int mochila() {
+        return Dungeon.hero == null ? -1
+            : Dungeon.hero.belongings.backpack.items.size();
+    }
+
+    /**
+     * Gira el ojo para mirar a una casilla. La direccion de la vista con
+     * el pixel central sale de cellFromRay: el horizontal es
+     * (-sin yaw, -cos yaw) y el vertical sin(pitch), asi que el yaw que
+     * apunta a (tx,tz) es atan2(-tx,-tz).
+     */
+    private static void apuntarA(int celda) {
+        com.watabou.noosa.Camera3D cam =
+            com.github.dachhack.sprout.FirstPerson.camera();
+        if (cam == null) { reportar("sin camara"); return; }
+        int w = com.github.dachhack.sprout.levels.Level.getWidth();
+        float tx = com.github.dachhack.sprout.DungeonTilemap3D.worldX(celda, w)
+            - cam.eyeX;
+        float tz = com.github.dachhack.sprout.DungeonTilemap3D.worldZ(celda, w)
+            - cam.eyeZ;
+        float largo = (float) Math.sqrt(tx * tx + tz * tz);
+        float yaw = (float) Math.toDegrees(Math.atan2(-tx, -tz));
+        float alto = com.github.dachhack.sprout.Billboards.itemHeight * 0.5f;
+        float pitch = (float) Math.toDegrees(
+            Math.atan2(alto - cam.eyeY, largo));
+        com.github.dachhack.sprout.FirstPerson.yaw = yaw;
+        com.github.dachhack.sprout.FirstPerson.pitch = pitch;
+        reportar("apuntarA " + celda + ": yaw=" + yaw + " pitch=" + pitch
+            + " dist=" + largo + " ojo=(" + cam.eyeX + "," + cam.eyeY
+            + "," + cam.eyeZ + ")");
+    }
+
+    private static String estadoArma() {
+        com.github.dachhack.sprout.items.KindOfWeapon a =
+            Dungeon.hero.belongings.weapon;
+        return a == null ? "arma=(ninguna)"
+            : "arma=" + a.getClass().getSimpleName()
+              + " nivel=" + a.level + " nombre=" + a.name();
+    }
+
+    /** Una casilla vecina por la que se pueda caminar. */
+    private static int vecinoPisable() {
+        int w = com.github.dachhack.sprout.levels.Level.getWidth();
+        int[] alrededor = { -w, w, -1, 1 };
+        for (int d : alrededor) {
+            int c = Dungeon.hero.pos + d;
+            if (c > 0 && c < Dungeon.level.map.length
+                && com.github.dachhack.sprout.levels.Level.passable[c]) {
+                return c;
+            }
+        }
+        return -1;
     }
 
     @JSBody(script = "return window.__pdOrden || null;")
