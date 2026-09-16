@@ -32,6 +32,7 @@ public final class Entrada {
     public static void escuchar(org.teavm.jso.dom.html.HTMLCanvasElement lienzo,
                                 GLSurfaceView vista) {
         instalar();
+        instalarTeclado();
     }
 
     /**
@@ -44,6 +45,7 @@ public final class Entrada {
      * en JS, donde el rectangulo real esta a mano.
      */
     public static void bombear(GLSurfaceView vista) {
+        bombearTeclas();
         int n = colaLargo();
         if (n == 0) return;
 
@@ -168,6 +170,65 @@ public final class Entrada {
         "c.addEventListener('touchend', suelta, {passive: false});" +
         "c.addEventListener('touchcancel', suelta, {passive: false});")
     private static native void instalar();
+
+    /**
+     * Teclado. Va por su propia cola: el formato de los toques es de largo
+     * variable (cuantos dedos hay) y meter ahi registros de otra forma es
+     * pedir que un dia se lean corridos.
+     *
+     * Solo movimiento y giro. Todo lo demas -- inventario, esperar, buscar
+     * -- ya tiene boton en pantalla, y el juego se diseño para tocarse.
+     */
+    private static void bombearTeclas() {
+        int n = teclasLargo();
+        if (n == 0) return;
+        for (int i = 0; i + 1 < n; i += 2) {
+            int codigo = (int) teclasLeer(i);
+            boolean abajo = teclasLeer(i + 1) != 0;
+            com.github.dachhack.sprout.FirstPersonControls.tecla(codigo, abajo);
+        }
+        teclasLimpiar();
+    }
+
+    @JSBody(script =
+        "if (window.__pdTeclado) return; window.__pdTeclado = true;" +
+        "var q = window.__pdTeclas = [];" +
+        // Los mismos numeros que FirstPersonControls.TECLA_*.
+        "var mapa = {" +
+        "  ArrowUp: 1, KeyW: 1," +
+        "  ArrowRight: 2, KeyD: 2," +
+        "  ArrowDown: 3, KeyS: 3," +
+        "  ArrowLeft: 4, KeyA: 4," +
+        "  KeyQ: 5, KeyE: 6" +
+        "};" +
+        "function manda(e, abajo) {" +
+        "  var c = mapa[e.code];" +
+        "  if (!c) return;" +
+        // Sin esto las flechas hacen scroll de la pagina bajo el juego.
+        "  e.preventDefault();" +
+        // Un keydown repetido por el teclado no es una tecla nueva: el
+        // paso lo marca el reloj del juego, no la velocidad de repeticion
+        // del sistema.
+        "  if (abajo && e.repeat) return;" +
+        "  q.push(c, abajo ? 1 : 0);" +
+        "}" +
+        "window.addEventListener('keydown', function (e) { manda(e, true); });" +
+        "window.addEventListener('keyup',   function (e) { manda(e, false); });" +
+        // Cambiar de pestana con una tecla abajo nunca manda su keyup, y el
+        // heroe se queda caminando solo contra una pared.
+        "window.addEventListener('blur', function () {" +
+        "  q.push(1,0, 2,0, 3,0, 4,0, 5,0, 6,0);" +
+        "});")
+    private static native void instalarTeclado();
+
+    @JSBody(script = "return window.__pdTeclas ? window.__pdTeclas.length : 0;")
+    private static native int teclasLargo();
+
+    @JSBody(params = "i", script = "return window.__pdTeclas[i];")
+    private static native double teclasLeer(int i);
+
+    @JSBody(script = "if (window.__pdTeclas) window.__pdTeclas.length = 0;")
+    private static native void teclasLimpiar();
 
     @JSBody(script = "return window.__pdCola ? window.__pdCola.length : 0;")
     private static native int colaLargo();

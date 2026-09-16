@@ -36,7 +36,11 @@ public final class Diagnostico {
         return "nivel libres=" + libres + "/" + total
             + " piso=" + Dungeon.depth
             + " salida=" + lvl.exit + " entrada=" + lvl.entrance
-            + " heroe=" + (Dungeon.hero != null ? Dungeon.hero.pos : -1);
+            + " heroe=" + (Dungeon.hero != null ? Dungeon.hero.pos : -1)
+            + " listo=" + (Dungeon.hero != null && Dungeon.hero.ready)
+            + " mirando=" + com.github.dachhack.sprout.FirstPerson.facing8()
+            + " vecinos=" + vecinos()
+            + " " + com.github.dachhack.sprout.FirstPersonControls.estadoTeclas();
     }
 
     /**
@@ -218,6 +222,143 @@ public final class Diagnostico {
                 celdaPrueba = salida;
                 reportar("verEscalera: salida=" + salida + " mirando desde "
                     + desde + " (apuntar en la siguiente orden)");
+            } else if ("reubicar".equals(cmd)) {
+                int c = Dungeon.level.randomRespawnCell();
+                if (c < 0) { reportar("sin sitio"); return; }
+                Dungeon.hero.pos = c;
+                if (Dungeon.hero.sprite != null) Dungeon.hero.sprite.place(c);
+                Dungeon.observe();
+                reportar("reubicar: heroe a " + c
+                    + " (entrada=" + Dungeon.level.entrance
+                    + " salida=" + Dungeon.level.exit + ")");
+            } else if ("reubicarAbierto".equals(cmd)) {
+                // Una casilla con las CUATRO direcciones locales libres y
+                // sin bicho encima, para que "no se movio" solo pueda
+                // significar que el teclado fallo.
+                int w = com.github.dachhack.sprout.levels.Level.getWidth();
+                int elegida = -1;
+                for (int intento = 0; intento < 400 && elegida < 0; intento++) {
+                    int c = Dungeon.level.randomRespawnCell();
+                    if (c < 0) continue;
+                    boolean todas = true;
+                    for (int d = 0; d < 8; d += 2) {
+                        int v = com.github.dachhack.sprout.FirstPerson
+                            .neighbour(c, d, w);
+                        if (v < 0
+                            || !com.github.dachhack.sprout.levels.Level.passable[v]
+                            || com.github.dachhack.sprout.actors.Actor.findChar(v) != null) {
+                            todas = false; break;
+                        }
+                    }
+                    if (todas && c != Dungeon.level.entrance
+                        && c != Dungeon.level.exit) elegida = c;
+                }
+                if (elegida < 0) { reportar("sin casilla abierta"); return; }
+                celdaPrueba = elegida;
+                Dungeon.hero.pos = elegida;
+                if (Dungeon.hero.sprite != null) Dungeon.hero.sprite.place(elegida);
+                Dungeon.observe();
+                reportar("reubicarAbierto: heroe a " + elegida + " " + vecinos());
+            } else if ("volverAbierto".equals(cmd)) {
+                if (celdaPrueba < 0) { reportar("sin casilla"); return; }
+                Dungeon.hero.pos = celdaPrueba;
+                if (Dungeon.hero.sprite != null) {
+                    Dungeon.hero.sprite.place(celdaPrueba);
+                }
+                Dungeon.observe();
+            } else if ("pelear".equals(cmd)) {
+                // Un bicho pegado al heroe y a darse. Lo que se mira no es
+                // quien gana sino que los turnos sigan corriendo: que el
+                // heroe pegue, que el bicho pegue, y que nadie se quede
+                // esperando a nadie.
+                int w = com.github.dachhack.sprout.levels.Level.getWidth();
+                int donde = -1;
+                for (int d = 0; d < 8 && donde < 0; d += 2) {
+                    int v = com.github.dachhack.sprout.FirstPerson
+                        .neighbour(Dungeon.hero.pos, d, w);
+                    if (v >= 0 && com.github.dachhack.sprout.levels.Level.passable[v]
+                        && com.github.dachhack.sprout.actors.Actor.findChar(v) == null) {
+                        donde = v;
+                    }
+                }
+                if (donde < 0) { reportar("pelear: sin sitio al lado"); return; }
+                com.github.dachhack.sprout.actors.mobs.Mob m =
+                    com.github.dachhack.sprout.actors.mobs.Bestiary.mob(Dungeon.depth);
+                m.pos = donde;
+                GameScene.add(m);
+                Dungeon.observe();
+                reportar("pelear: " + m.getClass().getSimpleName()
+                    + " en " + donde + " hp=" + m.HP + "/" + m.HT
+                    + " heroeHP=" + Dungeon.hero.HP + "/" + Dungeon.hero.HT);
+                GameScene.handleCell(donde);
+            } else if ("atacar".equals(cmd)) {
+                // El bicho visible mas cercano, y golpear. Igual que tocarlo
+                // en pantalla.
+                com.github.dachhack.sprout.actors.mobs.Mob blanco = null;
+                int mejor = Integer.MAX_VALUE;
+                for (com.github.dachhack.sprout.actors.mobs.Mob m
+                        : Dungeon.level.mobs.toArray(
+                            new com.github.dachhack.sprout.actors.mobs.Mob[0])) {
+                    if (!com.github.dachhack.sprout.levels.Level
+                            .fieldOfView[m.pos]) continue;
+                    int d = Math.abs(m.pos - Dungeon.hero.pos);
+                    if (d < mejor) { mejor = d; blanco = m; }
+                }
+                if (blanco == null) { reportar("atacar: no veo a nadie"); return; }
+                reportar("atacar: " + blanco.getClass().getSimpleName()
+                    + " en " + blanco.pos + " hp=" + blanco.HP
+                    + " heroeHP=" + Dungeon.hero.HP
+                    + " listo=" + Dungeon.hero.ready);
+                GameScene.handleCell(blanco.pos);
+            } else if ("verPelea".equals(cmd)) {
+                StringBuilder sb = new StringBuilder("verPelea: heroeHP="
+                    + Dungeon.hero.HP + "/" + Dungeon.hero.HT
+                    + " vivo=" + Dungeon.hero.isAlive()
+                    + " listo=" + Dungeon.hero.ready + " bichos=");
+                for (com.github.dachhack.sprout.actors.mobs.Mob m
+                        : Dungeon.level.mobs.toArray(
+                            new com.github.dachhack.sprout.actors.mobs.Mob[0])) {
+                    sb.append(m.getClass().getSimpleName())
+                      .append(':').append(m.HP).append(' ');
+                }
+                reportar(sb.toString());
+            } else if ("generarTodos".equals(cmd)) {
+                // Genera un piso de cada profundidad con el generador real.
+                // Es lo unico que prueba que TeaVM no se comio el pintor de
+                // algun cuarto que solo sale en la Prision o en la Ciudad:
+                // un nivel que no se puede pintar no truena, sale vacio.
+                //
+                // DESTRUCTIVO: newLevel() hace Actor.clear() y deja
+                // Dungeon.level en null. La partida no sobrevive, por eso
+                // esta orden va al final de una corrida.
+                Dungeon.depth = 0;
+                int malos = 0;
+                for (int i = 0; i < 30; i++) {
+                    try {
+                        com.github.dachhack.sprout.levels.Level l =
+                            Dungeon.newLevel();
+                        int libres = 0;
+                        for (int c = 0; c < l.map.length; c++) {
+                            int t = l.map[c];
+                            if (t >= 0 && t < com.github.dachhack.sprout.levels
+                                    .Terrain.flags.length
+                                && (com.github.dachhack.sprout.levels.Terrain
+                                    .flags[t] & com.github.dachhack.sprout.levels
+                                    .Terrain.SOLID) == 0) libres++;
+                        }
+                        boolean pobre = libres < 60;
+                        if (pobre) malos++;
+                        reportar("piso " + Dungeon.depth + " "
+                            + l.getClass().getSimpleName()
+                            + " libres=" + libres
+                            + " entrada=" + l.entrance + " salida=" + l.exit
+                            + (pobre ? "   <<< SOSPECHOSO" : ""));
+                    } catch (Throwable t) {
+                        malos++;
+                        reportar("piso " + Dungeon.depth + " REVENTO: " + t);
+                    }
+                }
+                reportar("generarTodos: terminado, sospechosos/rotos=" + malos);
             } else if ("caer".equals(cmd)) {
                 // El reporte de Leonel, tal cual: tirarse a un chasm.
                 reportar("orden caer: desde " + Dungeon.hero.pos
@@ -270,6 +411,21 @@ public final class Diagnostico {
         return a == null ? "arma=(ninguna)"
             : "arma=" + a.getClass().getSimpleName()
               + " nivel=" + a.level + " nombre=" + a.name();
+    }
+
+    /** Que hay en las 4 direcciones locales del heroe: P pisable, X no. */
+    private static String vecinos() {
+        if (Dungeon.hero == null || Dungeon.level == null) return "?";
+        int w = com.github.dachhack.sprout.levels.Level.getWidth();
+        StringBuilder sb = new StringBuilder();
+        int[] dirs = { 0, 2, 4, 6 };   // adelante, derecha, atras, izquierda
+        for (int d : dirs) {
+            int c = com.github.dachhack.sprout.FirstPerson.neighbour(
+                Dungeon.hero.pos, d, w);
+            sb.append(c >= 0
+                && com.github.dachhack.sprout.levels.Level.passable[c] ? 'P' : 'X');
+        }
+        return sb.toString();
     }
 
     /** Una casilla vecina por la que se pueda caminar. */
