@@ -331,9 +331,12 @@ public final class Diagnostico {
                 // DESTRUCTIVO: newLevel() hace Actor.clear() y deja
                 // Dungeon.level en null. La partida no sobrevive, por eso
                 // esta orden va al final de una corrida.
-                Dungeon.depth = 0;
+                // Por tandas: generar treinta niveles de un tiron mata la
+                // pestana en un servidor sin GPU, y se pierde todo lo que
+                // ya se habia probado. Cada llamada avanza seis.
+                if (pisoGen == 0) { Dungeon.depth = 0; }
                 int malos = 0;
-                for (int i = 0; i < 30; i++) {
+                for (int i = 0; i < 6 && pisoGen < 30; i++, pisoGen++) {
                     try {
                         com.github.dachhack.sprout.levels.Level l =
                             Dungeon.newLevel();
@@ -358,7 +361,9 @@ public final class Diagnostico {
                         reportar("piso " + Dungeon.depth + " REVENTO: " + t);
                     }
                 }
-                reportar("generarTodos: terminado, sospechosos/rotos=" + malos);
+                reportar("generarTodos: tanda hasta piso " + Dungeon.depth
+                    + ", sospechosos/rotos en la tanda=" + malos
+                    + (pisoGen >= 30 ? "  TERMINADO" : ""));
             } else if ("caer".equals(cmd)) {
                 // El reporte de Leonel, tal cual: tirarse a un chasm.
                 reportar("orden caer: desde " + Dungeon.hero.pos
@@ -372,6 +377,7 @@ public final class Diagnostico {
     }
 
     private static int celdaPrueba = -1;
+    private static int pisoGen = 0;
 
     private static int mochila() {
         return Dungeon.hero == null ? -1

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Jugar — PixelDoomgeon</title>
+<meta name="description" content="Sprouted Pixel Dungeon completo, corriendo en el navegador. Sin instalar nada.">
+<meta property="og:title" content="Jugar PixelDoomgeon en el navegador">
+<meta property="og:description" content="El juego entero, sin instalar nada.">
+<style>
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: #0B0D0C; color: #DCE3DD;
+    font-family: system-ui, -apple-system, sans-serif;
+    overscroll-behavior: none;
+  }
+  #juego {
+    display: block; width: 100%; height: 100%;
+    touch-action: none; -webkit-user-select: none; user-select: none;
+    outline: none;
+  }
+
+  #cargando {
+    position: fixed; inset: 0; z-index: 5;
+    display: grid; place-content: center; gap: 1rem;
+    text-align: center; background: #0B0D0C;
+  }
+  #cargando h1 { font-size: 1.35rem; margin: 0; font-weight: 600; letter-spacing: .01em; }
+  #riel {
+    width: min(70vw, 18rem); height: 5px; margin: 0 auto;
+    background: #262C28; border-radius: 99px; overflow: hidden;
+  }
+  #barra { height: 100%; width: 0%; background: #E0A83A; transition: width .15s; }
+  #cargando-texto { font-family: ui-monospace, monospace; font-size: .75rem; color: #59635C; margin: 0; }
+  #pista { color: #59635C; font-size: .85rem; margin: 0; max-width: 26ch; }
+
+  /* Vuelta a la página. Se retira sola: una vez que estás jugando estorba. */
+  #volver {
+    position: fixed; z-index: 4;
+    left: max(.6rem, env(safe-area-inset-left));
+    bottom: max(.6rem, env(safe-area-inset-bottom));
+    padding: .4rem .7rem; border-radius: 99px;
+    background: rgba(11,13,12,.7); border: 1px solid #262C28;
+    color: #59635C; text-decoration: none; font-size: .78rem;
+    transition: opacity .6s;
+  }
+  #volver:hover { color: #DCE3DD; }
+  #volver.ido { opacity: 0; pointer-events: none; }
+
+  /* El juego se dibuja para pantalla ancha -- el HUD, las ventanas y los
+     botones asumen esa proporción (setRequestedOrientation pide horizontal
+     en Android; aquí no hay forma de forzar la pantalla, así que se pide
+     con un cartel en vez de dejar que se vea roto). Sin filtrar por tipo
+     de puntero a proposito: detectar tactil por CSS es poco fiable, y
+     una ventana angosta de escritorio se ve igual de mal -- el mensaje
+     avisa las dos salidas. */
+  #gira {
+    position: fixed; inset: 0; z-index: 10;
+    display: none;
+    pointer-events: none;
+    place-content: center; gap: 1rem;
+    text-align: center; padding: 2rem;
+    background: #0B0D0C; color: #DCE3DD;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  #gira svg { width: 3.5rem; height: 3.5rem; animation: girar 1.6s ease-in-out infinite; }
+  #gira p { margin: 0; font-size: 1rem; max-width: 22ch; margin-inline: auto; }
+  @keyframes girar {
+    0%, 20%   { transform: rotate(0deg); }
+    50%, 70%  { transform: rotate(-90deg); }
+    100%      { transform: rotate(-90deg); }
+  }
+  @media (orientation: portrait) {
+    #gira { display: grid; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="juego"></canvas>
+
+<div id="cargando">
+  <h1>PixelDoomgeon</h1>
+  <div id="riel"><div id="barra"></div></div>
+  <p id="cargando-texto">0 / 0</p>
+  <p id="pista">Cargando el juego completo. La primera vez tarda.</p>
+</div>
+
+<div id="gira">
+  <svg viewBox="0 0 24 24" fill="none" stroke="#E0A83A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="6" y="3" width="12" height="18" rx="2"></rect>
+    <line x1="10" y1="19" x2="14" y2="19"></line>
+  </svg>
+  <p>Gira el teléfono (o ensancha la ventana). El juego se juega en horizontal.</p>
+</div>
+
+<a id="volver" href="../">← PixelDoomgeon</a>
+
+<script src="juego.js"></script>
+<script>
+  main();
+  // El enlace de vuelta se va solo a los diez segundos: para entonces ya
+  // estás jugando y un botón encima de la pantalla sólo estorba.
+  setTimeout(function () {
+    document.getElementById('volver').classList.add('ido');
+  }, 10000);
+</script>
+</body>
+</html>

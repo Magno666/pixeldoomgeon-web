@@ -20,6 +20,9 @@ BUILD=$(grep -oE 'FP build v[0-9]+' \
   | head -1 | tr -d ' ' | tr '[:upper:]' '[:lower:]')
 SELLO="${BUILD:-build}-$(date +%Y%m%d%H%M)"
 
+# La pagina sale del repo, no de lo que hubiera en el servidor: si vive
+# solo en /var/www no hay forma de saber que cambio ni de volver atras.
+cp "$RAIZ/sitio/index.html" "$DESTINO/index.html"
 cp "$JS" "$DESTINO/juego.js"
 sed -i -E "s|<script src=\"juego\.js(\?v=[^\"]*)?\"|<script src=\"juego.js?v=$SELLO\"|" \
   "$DESTINO/index.html"
