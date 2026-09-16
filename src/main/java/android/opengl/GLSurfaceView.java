@@ -51,7 +51,7 @@ public class GLSurfaceView extends View {
     // seguir sin decir nada.
     @org.teavm.jso.JSBody(params = "msg", script =
         "document.title = msg; console.log(msg);" +
-        "if (true) {" +
+        "if (/[?&]diag\\b/.test(location.search) || /REVENTO/.test(msg)) {" +
         "  var d = document.getElementById('__pdDiagVis');" +
         "  if (!d) {" +
         "    d = document.createElement('div');" +
@@ -131,9 +131,13 @@ public class GLSurfaceView extends View {
                     // Los toques se recogen en JS y se vacian aqui, antes
                     // de dibujar, para que el cuadro ya los vea.
                     web.Entrada.bombear(GLSurfaceView.this);
+                    if (conDiagnostico()) {
+                        web.Diagnostico.atajos();
+                    }
                     renderer.onDrawFrame(null);
                 } catch (Throwable t) {
-                    diag("REVENTO en el frame " + cuadros + ": " + conCausas(t));
+                    diag("REVENTO en el frame " + cuadros + ": " + conCausas(t)
+                        + " || " + pila(t));
                     return;          // no seguir pintando sobre el error
                 }
                 cuadros++;
@@ -261,14 +265,31 @@ public class GLSurfaceView extends View {
         return sb.toString();
     }
 
-    // Temporal, mientras se caza el cuelgue en el telefono de Leonel: antes
-    // pedia ?diag en la URL, pero eso significa acordarse de escribirlo
-    // cada vez que abre el enlace de nuevo, y ya se le olvido mas de una
-    // vez. Siempre encendido por ahora -- volver a gatear con ?diag en
-    // cuanto esto quede resuelto, el recuadro no deberia verlo un jugador
-    // cualquiera.
-    @org.teavm.jso.JSBody(script = "return true;")
+    // Otra vez detras de ?diag. Estuvo siempre encendido mientras se cazaba
+    // el cuelgue de las transiciones de piso; ya esta cazado (era el shim
+    // de SoundPool llamando al listener de carga en pleno recorrido de su
+    // propio mapa), asi que el recuadro vuelve a ser cosa de quien lo pida.
+    // Los reventones siguen saliendo en pantalla sin ?diag: una pantalla
+    // congelada y muda fue justo lo que costo tres sesiones encontrar.
+    @org.teavm.jso.JSBody(script =
+        "return /[?&]diag\\b/.test(location.search);")
     private static native boolean conDiagnostico();
+
+    /** Las primeras lineas de la pila, de la causa mas profunda. Sin esto
+     *  un ConcurrentModificationException solo dice su nombre, y el nombre
+     *  no dice quien estaba iterando. */
+    private static String pila(Throwable t) {
+        Throwable raiz = t;
+        for (int i = 0; i < 5 && raiz.getCause() != null; i++) {
+            raiz = raiz.getCause();
+        }
+        StackTraceElement[] p = raiz.getStackTrace();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < p.length && i < 12; i++) {
+            sb.append(p[i]).append(" / ");
+        }
+        return sb.length() == 0 ? "(sin pila)" : sb.toString();
+    }
 
     public boolean entregarToque(MotionEvent e) { return onTouchEvent(e); }
 
