@@ -336,10 +336,13 @@ public final class Diagnostico {
                 // ya se habia probado. Cada llamada avanza seis.
                 if (pisoGen == 0) { Dungeon.depth = 0; }
                 int malos = 0;
-                for (int i = 0; i < 6 && pisoGen < 30; i++, pisoGen++) {
+                com.github.dachhack.sprout.levels.Level ultimo = null;
+                for (int i = 0; i < 5 && pisoGen < 30; i++, pisoGen++) {
+                    long t0 = System.currentTimeMillis();
                     try {
                         com.github.dachhack.sprout.levels.Level l =
                             Dungeon.newLevel();
+                        ultimo = l;
                         int libres = 0;
                         for (int c = 0; c < l.map.length; c++) {
                             int t = l.map[c];
@@ -355,15 +358,31 @@ public final class Diagnostico {
                             + l.getClass().getSimpleName()
                             + " libres=" + libres
                             + " entrada=" + l.entrance + " salida=" + l.exit
+                            + " " + (System.currentTimeMillis() - t0) + "ms"
                             + (pobre ? "   <<< SOSPECHOSO" : ""));
                     } catch (Throwable t) {
                         malos++;
-                        reportar("piso " + Dungeon.depth + " REVENTO: " + t);
+                        reportar("piso " + Dungeon.depth + " REVENTO tras "
+                            + (System.currentTimeMillis() - t0) + "ms: " + t);
                     }
+                }
+                // newLevel() deja Dungeon.level en null y Actor.clear()
+                // se lleva hasta al heroe: sin esto el siguiente cuadro
+                // revienta, el bucle se detiene y la orden que viene nunca
+                // llega a ejecutarse -- que es justo por que la segunda
+                // tanda "no terminaba".
+                if (ultimo != null) {
+                    Dungeon.switchLevel(ultimo, ultimo.entrance);
                 }
                 reportar("generarTodos: tanda hasta piso " + Dungeon.depth
                     + ", sospechosos/rotos en la tanda=" + malos
                     + (pisoGen >= 30 ? "  TERMINADO" : ""));
+            } else if ("curar".equals(cmd)) {
+                // Caerse hace daño de verdad; sin esto el heroe se muere a
+                // la tercera y la prueba de memoria se acaba antes de decir
+                // nada.
+                Dungeon.hero.HP = Dungeon.hero.HT;
+                reportar("curar: " + Dungeon.hero.HP + "/" + Dungeon.hero.HT);
             } else if ("caer".equals(cmd)) {
                 // El reporte de Leonel, tal cual: tirarse a un chasm.
                 reportar("orden caer: desde " + Dungeon.hero.pos
