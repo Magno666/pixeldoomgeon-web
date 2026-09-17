@@ -66,6 +66,39 @@
   }
   .interruptor > input { margin: .2rem 0 0; accent-color: var(--oro); width: 1.05rem; height: 1.05rem; }
 
+  .nota { color: var(--tenue); font-size: .85rem; line-height: 1.6; margin: 0 0 1rem; max-width: 54ch; }
+
+  .nivelado {
+    display: flex; gap: .8rem; align-items: center; flex-wrap: wrap;
+    background: var(--panel); border: 1px solid var(--borde);
+    border-radius: .5rem; padding: .8rem 1rem; margin-bottom: .8rem;
+  }
+  .nivelado select {
+    background: var(--fondo); color: var(--texto);
+    border: 1px solid var(--borde); border-radius: .35rem;
+    padding: .4rem .6rem; font: inherit; font-size: .9rem;
+  }
+
+  .grupos { display: grid; gap: .55rem; }
+  .grupo {
+    background: var(--panel); border: 1px solid var(--borde); border-radius: .5rem;
+  }
+  .grupo summary {
+    cursor: pointer; padding: .8rem 1rem; font-weight: 600;
+    list-style: none; display: flex; justify-content: space-between;
+  }
+  .grupo summary::-webkit-details-marker { display: none; }
+  .grupo summary b { color: var(--tenue); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .grupo[open] summary { border-bottom: 1px solid var(--borde); }
+  .cosas {
+    display: grid; gap: .1rem; padding: .6rem;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  }
+  .cosa { display: flex; gap: .5rem; align-items: center; padding: .35rem .45rem;
+    border-radius: .3rem; cursor: pointer; font-size: .88rem; }
+  .cosa:hover { background: #1b1f1a; }
+  .cosa input { accent-color: var(--oro); }
+
   .lanzar {
     display: inline-block; margin-top: 2.2rem;
     background: var(--sangre); color: #fff; text-decoration: none;
@@ -143,6 +176,54 @@
         <span class="dato">Piso 25, las salas. El final. Nadie lo ha visto así todavía.</span>
       </span>
     </label>
+    <label class="opcion">
+      <input type="radio" name="jefe" value="crab">
+      <span>
+        <span class="vida">Sprouted</span>
+        <span class="nombre">Rey Cangrejo</span>
+        <span class="dato">Piso 38. De los que añadió Sprouted; se llega por portal, no bajando.</span>
+      </span>
+    </label>
+    <label class="opcion">
+      <input type="radio" name="jefe" value="skeleton">
+      <span>
+        <span class="vida">Sprouted</span>
+        <span class="nombre">Rey Esqueleto</span>
+        <span class="dato">Piso 37. Su corte se levanta con él.</span>
+      </span>
+    </label>
+    <label class="opcion">
+      <input type="radio" name="jefe" value="thief">
+      <span>
+        <span class="vida">Sprouted</span>
+        <span class="nombre">Rey Ladrón</span>
+        <span class="dato">Piso 40. Te roba y se va corriendo.</span>
+      </span>
+    </label>
+    <label class="opcion">
+      <input type="radio" name="jefe" value="tenguden">
+      <span>
+        <span class="vida">Sprouted</span>
+        <span class="nombre">Tengu de la Guarida</span>
+        <span class="dato">Piso 36. El Tengu otra vez, pero en su casa.</span>
+      </span>
+    </label>
+    <label class="opcion">
+      <input type="radio" name="jefe" value="shadowyog">
+      <span>
+        <span class="vida">Sprouted</span>
+        <span class="nombre">Yog de Sombra</span>
+        <span class="dato">Piso 35. La versión que Sprouted esconde detrás de un portal.</span>
+      </span>
+    </label>
+    <label class="opcion">
+      <input type="radio" name="jefe" value="zot">
+      <span>
+        <span class="vida">Piso 99</span>
+        <span class="nombre">Zot</span>
+        <span class="dato">Lo más hondo que llega Sprouted. Si esto tiene un final, es este.</span>
+      </span>
+    </label>
   </div>
 
   <h2>Con quién</h2>
@@ -178,6 +259,159 @@
     </span>
   </label>
 
+
+  <h2>Qué te llevas</h2>
+  <p class="nota">
+    Todo lo que existe en el juego, tal cual sale de su propio catálogo.
+    Entra identificado y ya equipado: en una arena nadie quiere abrir el
+    inventario mientras el jefe le pega.
+  </p>
+
+  <label class="nivelado">
+    <span class="nombre">Subir lo que se pueda</span>
+    <select name="mejora">
+      <option value="0">Sin subir</option>
+      <option value="5">+5</option>
+      <option value="10" selected>+10</option>
+      <option value="15">+15</option>
+      <option value="25">+25</option>
+    </select>
+  </label>
+
+  <div class="grupos">
+    <details class="grupo">
+      <summary>Armas <b>19</b></summary>
+      <div class="cosas">
+        <label class="cosa"><input type="checkbox" name="obj" value="Dagger"><span>dagger</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Knuckles"><span>knuckleduster</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Quarterstaff"><span>quarterstaff</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Spear"><span>spear</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Mace"><span>mace</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Sword"><span>sword</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Longsword"><span>longsword</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="BattleAxe"><span>battle axe</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="WarHammer"><span>war hammer</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Glaive"><span>glaive</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ShortSword"><span>short sword</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Dart"><span>dart</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Javelin"><span>javelin</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="IncendiaryDart"><span>incendiary dart</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="CurareDart"><span>curare dart</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Shuriken"><span>shuriken</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Boomerang"><span>boomerang</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Tamahawk"><span>tomahawk</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Spork"><span>spork</span></label>
+      </div>
+    </details>
+    <details class="grupo">
+      <summary>Armaduras <b>5</b></summary>
+      <div class="cosas">
+        <label class="cosa"><input type="checkbox" name="obj" value="ClothArmor"><span>cloth armor</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="LeatherArmor"><span>leather armor</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="MailArmor"><span>mail armor</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ScaleArmor"><span>scale armor</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="PlateArmor"><span>plate armor</span></label>
+      </div>
+    </details>
+    <details class="grupo">
+      <summary>Pociones <b>15</b></summary>
+      <div class="cosas">
+        <label class="cosa"><input type="checkbox" name="obj" value="PotionOfHealing"><span>Potion of Healing</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="PotionOfExperience"><span>Potion of Experience</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="PotionOfToxicGas"><span>Potion of Toxic Gas</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="PotionOfParalyticGas"><span>Potion of Paralytic Gas</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="PotionOfLiquidFlame"><span>Potion of Liquid Flame</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="PotionOfLevitation"><span>Potion of Levitation</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="PotionOfStrength"><span>Potion of Strength</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="PotionOfMindVision"><span>Potion of Mind Vision</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="PotionOfPurity"><span>Potion of Purification</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="PotionOfInvisibility"><span>Potion of Invisibility</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="PotionOfMight"><span>Potion of Might</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="PotionOfFrost"><span>Potion of Frost</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="PotionOfMending"><span>Potion of Mending</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="PotionOfOverHealing"><span>Potion of Life</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Egg"><span>egg</span></label>
+      </div>
+    </details>
+    <details class="grupo">
+      <summary>Pergaminos <b>13</b></summary>
+      <div class="cosas">
+        <label class="cosa"><input type="checkbox" name="obj" value="ScrollOfIdentify"><span>Scroll of Identify</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ScrollOfTeleportation"><span>Scroll of Teleportation</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ScrollOfRemoveCurse"><span>Scroll of Remove Curse</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ScrollOfUpgrade"><span>Scroll of Upgrade</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ScrollOfRecharging"><span>Scroll of Recharging</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ScrollOfMagicMapping"><span>Scroll of Magic Mapping</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ScrollOfRage"><span>Scroll of Rage</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ScrollOfTerror"><span>Scroll of Terror</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ScrollOfLullaby"><span>Scroll of Lullaby</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ScrollOfMagicalInfusion"><span>Scroll of Magical Infusion</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ScrollOfPsionicBlast"><span>Scroll of Psionic Blast</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ScrollOfMirrorImage"><span>Scroll of Mirror Image</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ScrollOfRegrowth"><span>Scroll of Regrowth</span></label>
+      </div>
+    </details>
+    <details class="grupo">
+      <summary>Varitas <b>13</b></summary>
+      <div class="cosas">
+        <label class="cosa"><input type="checkbox" name="obj" value="WandOfTeleportation"><span>Wand of Teleportation</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="WandOfSlowness"><span>Wand of Slowness</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="WandOfFirebolt"><span>Wand of Firebolt</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="WandOfRegrowth"><span>Wand of Regrowth</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="WandOfPoison"><span>Wand of Poison</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="WandOfBlink"><span>Wand of Blink</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="WandOfLightning"><span>Wand of Lightning</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="WandOfAmok"><span>Wand of Amok</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="WandOfTelekinesis"><span>Wand of Telekinesis</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="WandOfFlock"><span>Wand of Flock</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="WandOfMagicMissile"><span>Wand of Magic Missile</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="WandOfDisintegration"><span>Wand of Disintegration</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="WandOfAvalanche"><span>Wand of Avalanche</span></label>
+      </div>
+    </details>
+    <details class="grupo">
+      <summary>Anillos <b>11</b></summary>
+      <div class="cosas">
+        <label class="cosa"><input type="checkbox" name="obj" value="RingOfAccuracy"><span>Ring of Accuracy</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="RingOfEvasion"><span>Ring of Evasion</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="RingOfElements"><span>Ring of Elements</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="RingOfForce"><span>Ring of Force</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="RingOfFuror"><span>Ring of Furor</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="RingOfHaste"><span>Ring of Haste</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="RingOfMagic"><span>Ring of Magic</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="RingOfMight"><span>Ring of Might</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="RingOfSharpshooting"><span>Ring of Sharpshooting</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="RingOfTenacity"><span>Ring of Tenacity</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="RingOfWealth"><span>Ring of Wealth</span></label>
+      </div>
+    </details>
+    <details class="grupo">
+      <summary>Artefactos <b>12</b></summary>
+      <div class="cosas">
+        <label class="cosa"><input type="checkbox" name="obj" value="CapeOfThorns"><span>Cape of Thorns</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="ChaliceOfBlood"><span>Chalice of Blood</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="CloakOfShadows"><span>Cloak of Shadows</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="HornOfPlenty"><span>Horn of Plenty</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="MasterThievesArmband"><span>Master Thieves' Armband</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="SandalsOfNature"><span>Sandals of Nature</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="TalismanOfForesight"><span>Talisman of Foresight</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="TimekeepersHourglass"><span>Timekeeper's Hourglass</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="AlchemistsToolkit"><span>Alchemists Toolkit</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="RingOfDisintegration"><span>Ring of Disintegration</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="RingOfFrost"><span>Ring of Frost</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="DriedRose"><span>Dried Rose</span></label>
+      </div>
+    </details>
+    <details class="grupo">
+      <summary>Comida <b>3</b></summary>
+      <div class="cosas">
+        <label class="cosa"><input type="checkbox" name="obj" value="Food"><span>ration of food</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="Pasty"><span>pasty</span></label>
+        <label class="cosa"><input type="checkbox" name="obj" value="MysteryMeat"><span>mystery meat</span></label>
+      </div>
+    </details>
+  </div>
+
   <button class="lanzar" type="submit">Entrar a la arena</button>
 
   <p class="aviso">
@@ -210,10 +444,15 @@
     e.preventDefault();
     var d = new FormData(e.target);
     var q = new URLSearchParams({
-      jefe:  d.get('jefe'),
-      clase: d.get('clase'),
-      roto:  d.get('roto') ? '1' : '0'
+      jefe:   d.get('jefe'),
+      clase:  d.get('clase'),
+      roto:   d.get('roto') ? '1' : '0',
+      mejora: d.get('mejora') || '0'
     });
+    // Sólo si escogieron algo: una URL con noventa claves vacías no le
+    // sirve a nadie, y con muchas seleccionadas ya se hace larga.
+    var cosas = d.getAll('obj');
+    if (cosas.length) q.set('objetos', cosas.join(','));
     location.href = '../juego/?' + q.toString();
   });
 </script>
