@@ -50,7 +50,26 @@ public final class Diagnostico {
      * y caminar hasta ella. Esto le pide al juego lo mismo que un toque
      * sobre la escalera: handleCell(exit), que hace el camino solo.
      */
+    // --- muestreo del paso ---
+    private static float[] alturas = null;
+    private static float[] avances = null;
+    private static int muestra = 0;
+
+    /** Guarda la altura del ojo y el avance, un dato por cuadro. Es la
+     *  unica forma de saber si el "salto" que se ve al caminar es el
+     *  cabeceo o la interpolacion del desplazamiento. */
+    private static void muestrear() {
+        if (alturas == null || muestra >= alturas.length) return;
+        com.watabou.noosa.Camera3D cam =
+            com.github.dachhack.sprout.FirstPerson.camera();
+        if (cam == null) return;
+        alturas[muestra] = cam.eyeY;
+        avances[muestra] = (float) Math.sqrt(cam.eyeX * cam.eyeX + cam.eyeZ * cam.eyeZ);
+        muestra++;
+    }
+
     public static void atajos() {
+        muestrear();
         String cmd = ordenPendiente();
         if (cmd == null || cmd.length() == 0) {
             return;
@@ -152,6 +171,20 @@ public final class Diagnostico {
                 // antes de tocarla.
                 if (celdaPrueba < 0) { reportar("no hay celda de prueba"); return; }
                 apuntarA(celdaPrueba);
+            } else if ("marcarBicho".equals(cmd)) {
+                com.github.dachhack.sprout.actors.mobs.Mob cerca = null;
+                int mejorD = Integer.MAX_VALUE;
+                for (com.github.dachhack.sprout.actors.mobs.Mob m
+                        : Dungeon.level.mobs.toArray(
+                            new com.github.dachhack.sprout.actors.mobs.Mob[0])) {
+                    if (!com.github.dachhack.sprout.levels.Level.fieldOfView[m.pos]) continue;
+                    int d = Math.abs(m.pos - Dungeon.hero.pos);
+                    if (d < mejorD) { mejorD = d; cerca = m; }
+                }
+                if (cerca == null) { reportar("marcarBicho: no veo ninguno"); return; }
+                celdaPrueba = cerca.pos;
+                reportar("marcarBicho: " + cerca.getClass().getSimpleName()
+                    + " en " + cerca.pos + " heroe=" + Dungeon.hero.pos);
             } else if ("marcarJefe".equals(cmd)) {
                 com.github.dachhack.sprout.actors.mobs.Mob j2 = jefe();
                 if (j2 == null) { reportar("marcarJefe: no hay jefe"); return; }
@@ -383,6 +416,30 @@ public final class Diagnostico {
                 reportar("generarTodos: tanda hasta piso " + Dungeon.depth
                     + ", sospechosos/rotos en la tanda=" + malos
                     + (pisoGen >= 30 ? "  TERMINADO" : ""));
+            } else if ("medirPaso".equals(cmd)) {
+                alturas = new float[240];
+                avances = new float[240];
+                muestra = 0;
+                reportar("medirPaso: grabando " + alturas.length + " cuadros");
+            } else if ("verPaso".equals(cmd)) {
+                if (alturas == null || muestra < 3) { reportar("verPaso: sin datos"); return; }
+                float min = alturas[0], max = alturas[0];
+                for (int i = 0; i < muestra; i++) {
+                    if (alturas[i] < min) min = alturas[i];
+                    if (alturas[i] > max) max = alturas[i];
+                }
+                StringBuilder sb = new StringBuilder("verPaso: cuadros=" + muestra
+                    + " cabeceo=" + (max - min) + " (min " + min + " max " + max + ")\n   alturas:");
+                for (int i = 0; i < muestra; i += 2) {
+                    sb.append(' ').append(Math.round((alturas[i] - min) * 1000f));
+                }
+                sb.append("\n   avance:");
+                float base = avances[0];
+                for (int i = 0; i < muestra; i += 2) {
+                    sb.append(' ').append(Math.round((avances[i] - base) * 100f));
+                }
+                reportar(sb.toString());
+                alturas = null;
             } else if ("curar".equals(cmd)) {
                 // Caerse hace daño de verdad; sin esto el heroe se muere a
                 // la tercera y la prueba de memoria se acaba antes de decir
