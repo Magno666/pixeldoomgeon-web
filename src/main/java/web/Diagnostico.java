@@ -158,6 +158,12 @@ public final class Diagnostico {
                 // antes de tocarla.
                 if (celdaPrueba < 0) { reportar("no hay celda de prueba"); return; }
                 apuntarA(celdaPrueba);
+            } else if ("marcarJefe".equals(cmd)) {
+                com.github.dachhack.sprout.actors.mobs.Mob j2 = jefe();
+                if (j2 == null) { reportar("marcarJefe: no hay jefe"); return; }
+                celdaPrueba = j2.pos;
+                reportar("marcarJefe: " + j2.getClass().getSimpleName()
+                    + " en " + j2.pos);
             } else if ("rayoCarne".equals(cmd)) {
                 // Y ahora: de todos los pixeles de la pantalla, cuantos
                 // devuelven la casilla de la carne. Si son cero, tocarla es
@@ -650,33 +656,30 @@ public final class Diagnostico {
     }
 
     /** El jefe del piso, si lo hay. */
+    /**
+     * El jefe del piso. Quien cuenta como jefe lo decide Arena.esJefe y
+     * nadie mas: tener dos listas costo una tarde de "no hay jefe" con el
+     * Rey Enano delante, porque la de aqui se habia quedado sin King ni
+     * Yog.
+     */
     private static com.github.dachhack.sprout.actors.mobs.Mob jefe() {
         if (Dungeon.level == null) return null;
-        // El Goo de verdad manda. Sprouted suelta PoisonGoo como secuaces
-        // ADEMAS de usarlo como segunda fase, asi que tomar "el primer
-        // jefe que aparezca" reparte los golpes entre el jefe y su tropa
-        // -- y Goo se regenera en el agua mas rapido de lo que se le pega.
-        // Sin Goo, gana el PoisonGoo de mas vida maxima: la segunda fase
-        // trae 100 y los secuaces 50.
-        com.github.dachhack.sprout.actors.mobs.Mob mejorGoo = null;
+        // El Goo de verdad manda: Sprouted suelta PoisonGoo como secuaces
+        // ademas de usarlo de segunda fase, y repartir los golpes entre el
+        // jefe y su tropa deja a Goo curandose en el agua mas rapido de lo
+        // que se le pega.
+        com.github.dachhack.sprout.actors.mobs.Mob respaldo = null;
         for (com.github.dachhack.sprout.actors.mobs.Mob m
                 : Dungeon.level.mobs.toArray(
                     new com.github.dachhack.sprout.actors.mobs.Mob[0])) {
-            if (m instanceof com.github.dachhack.sprout.actors.mobs.Goo) {
-                return m;
-            }
-            if (m instanceof com.github.dachhack.sprout.actors.mobs.PoisonGoo
-                && (mejorGoo == null || m.HT > mejorGoo.HT)) {
-                mejorGoo = m;
-            }
-            if (m instanceof com.github.dachhack.sprout.actors.mobs.Tengu
-                || m instanceof com.github.dachhack.sprout.actors.mobs.DM300
-                || m instanceof com.github.dachhack.sprout.actors.mobs.SkeletonKing
-                || m instanceof com.github.dachhack.sprout.actors.mobs.ThiefKing) {
+            if (!Arena.esJefe(m)) continue;
+            if (m instanceof com.github.dachhack.sprout.actors.mobs.PoisonGoo) {
+                if (respaldo == null || m.HT > respaldo.HT) respaldo = m;
+            } else {
                 return m;
             }
         }
-        return mejorGoo;
+        return respaldo;
     }
 
     private static String estadoArma() {

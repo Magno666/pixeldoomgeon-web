@@ -106,11 +106,15 @@ public final class Arena {
         int col0 = jefe.pos % w, fil0 = jefe.pos / w;
         int filas = Dungeon.level.map.length / w;
 
-        // Primero, justo al SUR del jefe y en su misma columna. El yaw de
-        // arranque es 0, que mira al norte, asi que colocado ahi lo tienes
-        // de frente sin girar la camara -- y girarla desde aqui no sirve:
-        // FirstPerson.reset() la pone a cero al construirse la escena y
-        // update() la sigue moviendo cada cuadro.
+        // Primero, justo al SUR del jefe y en su misma columna: es el
+        // encuadre mas limpio, con el jefe al fondo del pasillo.
+        //
+        // Aqui me equivoque antes: di por hecho que el yaw de arranque era
+        // 0 (norte) y que colocado al sur ya lo tendrias de frente, asi
+        // que en esta rama me saltaba el encarado. Medido con el rayo de
+        // la pantalla: el yaw de arranque es 180, o sea mirando al sur --
+        // de espaldas al jefe. Cero de 361 puntos de pantalla daban con
+        // el. Se encara SIEMPRE, venga de la rama que venga.
         for (int r = 5; r >= 2 && elegida < 0; r--) {
             int fil = fil0 + r;
             if (fil >= filas) break;
@@ -134,11 +138,7 @@ public final class Arena {
 
                     Dungeon.hero.pos = c;
                     Dungeon.observe();
-                    if (Level.fieldOfView[jefe.pos]) {
-                        elegida = c;
-                        celdaAMirar = jefe.pos;
-                        break;
-                    }
+                    if (Level.fieldOfView[jefe.pos]) { elegida = c; break; }
                 }
             }
         }
@@ -150,6 +150,10 @@ public final class Arena {
             Dungeon.hero.sprite.place(Dungeon.hero.pos);
         }
         Dungeon.observe();
+
+        // Se deja pendiente, no se hace ya: la escena todavia no existe y
+        // al construirse FirstPerson.reset() borraria el giro.
+        celdaAMirar = jefe.pos;
     }
 
     /**
@@ -164,6 +168,11 @@ public final class Arena {
             return;
         }
         com.github.dachhack.sprout.FirstPerson.faceCell(celdaAMirar);
+        // Y la vista mas nivelada que de costumbre. Con el cabeceo normal
+        // el centro de la pantalla cae en el suelo y el jefe queda en la
+        // mitad de arriba; medido con el rayo, en DM-300 el centro daba en
+        // una losa a tres casillas. Aqui lo que importa es el bicho.
+        com.github.dachhack.sprout.FirstPerson.pitch = -2f;
         celdaAMirar = -1;
     }
 
