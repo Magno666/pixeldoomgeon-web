@@ -33,7 +33,24 @@ public class Context {
     public static final int MODE_PRIVATE = 0;
 
     private final AssetManager assets = new AssetManager();
-    private static final String PREFIJO = "pdg.file.";
+    private static String PREFIJO = "pdg.file.";
+
+    /**
+     * Cambia el cajon donde se guarda todo. La arena de jefes es un
+     * sandbox: si escribiera en el mismo sitio que la partida de verdad,
+     * cada visitante que se pusiera roto para pelear con Yog desbloquearia
+     * insignias, ensuciaria el ranking y podria pisar la partida guardada
+     * de quien ya estuviera jugando.
+     *
+     * Se cambia el prefijo y ya: el juego sigue creyendo que escribe
+     * archivos, pero caen en otro cajon de localStorage. Ninguna clase del
+     * juego se entera, que es justo lo que se busca.
+     */
+    public static void usarCajon(String nombre) {
+        PREFIJO = "pdg." + nombre + ".";
+    }
+
+    public static String cajon() { return PREFIJO; }
 
     public AssetManager getAssets() { return assets; }
 

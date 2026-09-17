@@ -321,6 +321,22 @@ public final class Diagnostico {
                     sb.append(m.getClass().getSimpleName())
                       .append(':').append(m.HP).append(' ');
                 }
+                com.github.dachhack.sprout.actors.mobs.Mob j = jefe();
+                if (j != null) {
+                    int w5 = com.github.dachhack.sprout.levels.Level.getWidth();
+                    int dx = Math.abs(j.pos % w5 - Dungeon.hero.pos % w5);
+                    int dy = Math.abs(j.pos / w5 - Dungeon.hero.pos / w5);
+                    sb.append(" || JEFE ").append(j.getClass().getSimpleName())
+                      .append(" en ").append(j.pos)
+                      .append(" heroe ").append(Dungeon.hero.pos)
+                      .append(" dist=").append(Math.max(dx, dy))
+                      .append(" visible=").append(Dungeon.visible[j.pos])
+                      .append(" enVista=").append(
+                          com.github.dachhack.sprout.levels.Level.fieldOfView[j.pos])
+                      .append(" sprite=").append(j.sprite != null)
+                      .append(" yaw=").append(
+                          com.github.dachhack.sprout.FirstPerson.yaw);
+                }
                 reportar(sb.toString());
             } else if ("generarTodos".equals(cmd)) {
                 // Genera un piso de cada profundidad con el generador real.

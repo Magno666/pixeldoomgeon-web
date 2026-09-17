@@ -23,6 +23,12 @@ SELLO="${BUILD:-build}-$(date +%Y%m%d%H%M)"
 # La pagina sale del repo, no de lo que hubiera en el servidor: si vive
 # solo en /var/www no hay forma de saber que cambio ni de volver atras.
 cp "$RAIZ/sitio/index.html" "$DESTINO/index.html"
+
+# La arena vive un nivel arriba, junto a /juego/, y usa el mismo juego.js
+# -- por eso no lleva copia propia: el navegador ya lo tiene en cache de
+# haber jugado, y son seis megas que no vale la pena duplicar.
+mkdir -p "$DESTINO/../arena"
+cp "$RAIZ/sitio/arena/index.html" "$DESTINO/../arena/index.html"
 cp "$JS" "$DESTINO/juego.js"
 sed -i -E "s|<script src=\"juego\.js(\?v=[^\"]*)?\"|<script src=\"juego.js?v=$SELLO\"|" \
   "$DESTINO/index.html"

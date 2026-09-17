@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arena de jefes — PixelDoomgeon</title>
+<meta name="description" content="Pelea contra los jefes de Sprouted Pixel Dungeon en primera persona, sin bajar veinticinco pisos. Escoge jefe, clase y equipo.">
+<meta property="og:title" content="Arena de jefes — PixelDoomgeon">
+<meta property="og:description" content="Los jefes de Pixel Dungeon, de frente y en primera persona. Escoge y pelea.">
+<style>
+  :root {
+    --fondo:   #0B0D0C;
+    --panel:   #141815;
+    --borde:   #262C28;
+    --texto:   #DCE3DD;
+    --tenue:   #59635C;
+    --oro:     #E0A83A;
+    --sangre:  #A33B2B;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; min-height: 100%;
+    background: var(--fondo); color: var(--texto);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  .envoltura { max-width: 60rem; margin: 0 auto; padding: 2rem 1.1rem 4rem; }
+
+  header { border-bottom: 1px solid var(--borde); padding-bottom: 1.4rem; margin-bottom: 2rem; }
+  h1 {
+    font-size: clamp(1.7rem, 5vw, 2.6rem); margin: 0 0 .5rem;
+    letter-spacing: -.01em; text-wrap: balance;
+  }
+  h1 span { color: var(--sangre); }
+  .bajada { color: var(--tenue); margin: 0; max-width: 46ch; line-height: 1.55; }
+
+  h2 {
+    font-size: .78rem; text-transform: uppercase; letter-spacing: .12em;
+    color: var(--tenue); margin: 2.2rem 0 .9rem; font-weight: 600;
+  }
+  h2:first-of-type { margin-top: 0; }
+
+  .rejilla { display: grid; gap: .7rem; grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); }
+
+  .opcion { position: relative; }
+  .opcion input { position: absolute; opacity: 0; pointer-events: none; }
+  .opcion > span {
+    display: block; cursor: pointer;
+    background: var(--panel); border: 1px solid var(--borde); border-radius: .5rem;
+    padding: .85rem .95rem; transition: border-color .15s, background .15s;
+  }
+  .opcion > span:hover { border-color: var(--tenue); }
+  .opcion input:checked + span { border-color: var(--oro); background: #1b1f1a; }
+  .opcion input:focus-visible + span { outline: 2px solid var(--oro); outline-offset: 2px; }
+  .nombre { display: block; font-weight: 600; margin-bottom: .18rem; }
+  .dato { display: block; color: var(--tenue); font-size: .8rem; line-height: 1.4; }
+  .vida {
+    float: right; font-variant-numeric: tabular-nums; color: var(--sangre);
+    font-size: .8rem; font-weight: 600;
+  }
+
+  .interruptor {
+    display: flex; gap: .8rem; align-items: flex-start;
+    background: var(--panel); border: 1px solid var(--borde);
+    border-radius: .5rem; padding: .95rem 1rem; cursor: pointer;
+  }
+  .interruptor > input { margin: .2rem 0 0; accent-color: var(--oro); width: 1.05rem; height: 1.05rem; }
+
+  .lanzar {
+    display: inline-block; margin-top: 2.2rem;
+    background: var(--sangre); color: #fff; text-decoration: none;
+    border: 0; border-radius: .5rem; padding: .95rem 2.2rem;
+    font-size: 1.05rem; font-weight: 600; cursor: pointer;
+    font-family: inherit;
+  }
+  .lanzar:hover { filter: brightness(1.12); }
+
+  .aviso {
+    margin-top: 1.1rem; color: var(--tenue); font-size: .85rem;
+    line-height: 1.6; max-width: 52ch;
+  }
+  footer {
+    margin-top: 3.5rem; padding-top: 1.4rem; border-top: 1px solid var(--borde);
+    color: var(--tenue); font-size: .82rem; line-height: 1.7;
+  }
+  footer a { color: var(--tenue); }
+  a { color: var(--oro); }
+</style>
+</head>
+<body>
+<div class="envoltura">
+
+<header>
+  <h1>Arena de <span>jefes</span></h1>
+  <p class="bajada">
+    Los jefes de Sprouted Pixel Dungeon, de frente y en primera persona, sin
+    bajar veinticinco pisos para llegar. Escoge con qué pelear y con qué
+    pelearlo.
+  </p>
+</header>
+
+<form id="forma">
+
+  <h2>Contra quién</h2>
+  <div class="rejilla">
+    <label class="opcion">
+      <input type="radio" name="jefe" value="goo" checked>
+      <span>
+        <span class="vida">200</span>
+        <span class="nombre">Goo</span>
+        <span class="dato">Piso 5, las alcantarillas. Se cura metido en el agua y a media pelea se parte en algo peor.</span>
+      </span>
+    </label>
+    <label class="opcion">
+      <input type="radio" name="jefe" value="tengu">
+      <span>
+        <span class="vida">300</span>
+        <span class="nombre">Tengu</span>
+        <span class="dato">Piso 10, la prisión. Se teletransporta. La prueba de fuego de una vista en primera persona.</span>
+      </span>
+    </label>
+    <label class="opcion">
+      <input type="radio" name="jefe" value="dm300">
+      <span>
+        <span class="vida">500</span>
+        <span class="nombre">DM-300</span>
+        <span class="dato">Piso 15, las cuevas. Levanta el suelo y repara su propia armadura.</span>
+      </span>
+    </label>
+    <label class="opcion">
+      <input type="radio" name="jefe" value="rey">
+      <span>
+        <span class="vida">500</span>
+        <span class="nombre">Rey Enano</span>
+        <span class="dato">Piso 20, la ciudad. No pelea solo: levanta a sus muertos.</span>
+      </span>
+    </label>
+    <label class="opcion">
+      <input type="radio" name="jefe" value="yog">
+      <span>
+        <span class="vida">2000</span>
+        <span class="nombre">Yog-Dzewa</span>
+        <span class="dato">Piso 25, las salas. El final. Nadie lo ha visto así todavía.</span>
+      </span>
+    </label>
+  </div>
+
+  <h2>Con quién</h2>
+  <div class="rejilla">
+    <label class="opcion">
+      <input type="radio" name="clase" value="warrior" checked>
+      <span><span class="nombre">Guerrero</span><span class="dato">Espada corta y armadura. Aguanta.</span></span>
+    </label>
+    <label class="opcion">
+      <input type="radio" name="clase" value="mage">
+      <span><span class="nombre">Mago</span><span class="dato">Bastón y varita. Frágil, pega de lejos.</span></span>
+    </label>
+    <label class="opcion">
+      <input type="radio" name="clase" value="rogue">
+      <span><span class="nombre">Pícaro</span><span class="dato">Daga y capa de sombras.</span></span>
+    </label>
+    <label class="opcion">
+      <input type="radio" name="clase" value="huntress">
+      <span><span class="nombre">Cazadora</span><span class="dato">Arco que no se acaba.</span></span>
+    </label>
+  </div>
+
+  <h2>Con qué</h2>
+  <label class="interruptor">
+    <input type="checkbox" name="roto" checked>
+    <span>
+      <span class="nombre">Ponerme roto</span>
+      <span class="dato">
+        Arma y armadura al tope, 500 de vida, nivel 30. Es una arena: la
+        gracia es ver la pelea, no morir en el primer golpe. Quítalo si
+        quieres que te cueste.
+      </span>
+    </span>
+  </label>
+
+  <button class="lanzar" type="submit">Entrar a la arena</button>
+
+  <p class="aviso">
+    Horizontal, y con paciencia la primera vez: el juego entero son unos
+    megas. En compu se juega con las flechas o WASD, Q y E para girar; en
+    teléfono con el stick de la izquierda y arrastrando a la derecha para
+    mirar.
+  </p>
+</form>
+
+<footer>
+  <p>
+    La arena guarda aparte: lo que hagas aquí no toca tu partida, tus
+    insignias ni el ranking del <a href="../juego/">juego normal</a>.
+  </p>
+  <p>
+    PixelDoomgeon es un fork de <a href="https://github.com/dachhack/SproutedPixelDungeon">Sprouted Pixel Dungeon</a>
+    de dachhack, que a su vez sale del Pixel Dungeon de
+    <a href="https://watabou.itch.io/">Watabou</a> y del Shattered de
+    <a href="https://shatteredpixel.com/">Evan Debenham</a>. GPL-3.0-or-later.
+    Proyecto de fan, sin relación oficial con ninguno de ellos.
+    <a href="../">Volver</a>.
+  </p>
+</footer>
+
+</div>
+
+<script>
+  document.getElementById('forma').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var d = new FormData(e.target);
+    var q = new URLSearchParams({
+      jefe:  d.get('jefe'),
+      clase: d.get('clase'),
+      roto:  d.get('roto') ? '1' : '0'
+    });
+    location.href = '../juego/?' + q.toString();
+  });
+</script>
+</body>
+</html>

@@ -3,6 +3,8 @@ package web;
 
 import com.github.dachhack.sprout.Arranque;
 
+import org.teavm.jso.JSBody;
+
 /**
  * Lo que en Android hace el sistema: crear la Activity y llamar onCreate.
  *
@@ -22,11 +24,27 @@ public final class Main {
         });
     }
 
+    @JSBody(params = "nombre", script =
+        "var v = new URLSearchParams(location.search).get(nombre);"
+        + "return v === null ? '' : v;")
+    private static native String parametro(String nombre);
+
     private static void arrancar() {
         try {
             MantenerVivo.tocar();
             MantenerGuardables.tocar();
             Arranque.encender();
+
+            // Arena de jefes: la pagina de /arena/ manda su eleccion en la
+            // URL. Va DESPUES de encender porque el juego tiene que estar
+            // vivo -- assets, texturas, escena -- antes de montarle una
+            // pelea encima. switchScene solo deja pedida la escena, asi que
+            // esta gana sobre la pantalla de titulo que acaba de pedir el
+            // arranque normal.
+            String jefe = parametro("jefe");
+            if (jefe != null && jefe.length() > 0) {
+                Arena.iniciar(jefe, parametro("clase"), "1".equals(parametro("roto")));
+            }
             // Sin esto el juego dibuja perfectamente debajo de una pantalla
             // de carga opaca que nunca se va. Es el mismo fallo que ya
             // costo tres dias en la demo web, con otro panel.
