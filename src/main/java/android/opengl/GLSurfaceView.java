@@ -131,7 +131,6 @@ public class GLSurfaceView extends View {
                     // Los toques se recogen en JS y se vacian aqui, antes
                     // de dibujar, para que el cuadro ya los vea.
                     web.Entrada.bombear(GLSurfaceView.this);
-                    web.Arena.aplicarMirada();
                     if (conDiagnostico()) {
                         web.Diagnostico.atajos();
                     }

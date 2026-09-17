@@ -672,7 +672,7 @@ public final class Diagnostico {
         for (com.github.dachhack.sprout.actors.mobs.Mob m
                 : Dungeon.level.mobs.toArray(
                     new com.github.dachhack.sprout.actors.mobs.Mob[0])) {
-            if (!Arena.esJefe(m)) continue;
+            if (!com.github.dachhack.sprout.Arena.esJefe(m)) continue;
             if (m instanceof com.github.dachhack.sprout.actors.mobs.PoisonGoo) {
                 if (respaldo == null || m.HT > respaldo.HT) respaldo = m;
             } else {

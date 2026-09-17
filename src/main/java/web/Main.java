@@ -43,7 +43,13 @@ public final class Main {
             // arranque normal.
             String jefe = parametro("jefe");
             if (jefe != null && jefe.length() > 0) {
-                Arena.iniciar(jefe, parametro("clase"), "1".equals(parametro("roto")));
+                // El aislamiento es cosa del navegador, no del juego: aqui
+                // los "archivos" son localStorage. Cambiar el cajon antes
+                // de arrancar la arena deja insignias, ranking y partida
+                // del sandbox en su propio sitio.
+                android.content.Context.usarCajon("arena");
+                com.github.dachhack.sprout.Arena.iniciar(
+                    jefe, parametro("clase"), "1".equals(parametro("roto")));
             }
             // Sin esto el juego dibuja perfectamente debajo de una pantalla
             // de carga opaca que nunca se va. Es el mismo fallo que ya
