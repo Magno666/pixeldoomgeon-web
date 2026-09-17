@@ -383,6 +383,209 @@ public final class Diagnostico {
                 // nada.
                 Dungeon.hero.HP = Dungeon.hero.HT;
                 reportar("curar: " + Dungeon.hero.HP + "/" + Dungeon.hero.HT);
+            } else if ("buscarJefe".equals(cmd)) {
+                com.github.dachhack.sprout.actors.mobs.Mob jefe = jefe();
+                if (jefe == null) { reportar("buscarJefe: no hay jefe en el piso " + Dungeon.depth); return; }
+                // Pegarse al jefe y aguantar el golpe: la pelea se prueba
+                // sola, no se juega bien.
+                int w = com.github.dachhack.sprout.levels.Level.getWidth();
+                int alLado = -1;
+                for (int d = 0; d < 8 && alLado < 0; d++) {
+                    int v = com.github.dachhack.sprout.FirstPerson.neighbour(jefe.pos, d, w);
+                    if (v >= 0 && com.github.dachhack.sprout.levels.Level.passable[v]
+                        && com.github.dachhack.sprout.actors.Actor.findChar(v) == null) alLado = v;
+                }
+                if (alLado < 0) { reportar("buscarJefe: sin sitio al lado"); return; }
+                Dungeon.hero.HT = 2000; Dungeon.hero.HP = 2000;
+                // Un guerrero de nivel 1 no le hace cosquillas a un jefe de
+                // 200 de vida que ademas se cura en el agua: la prueba se
+                // acabaria por aburrimiento, no por resultado.
+                if (Dungeon.hero.belongings.weapon != null) {
+                    for (int u = 0; u < 20; u++) {
+                        Dungeon.hero.belongings.weapon.upgrade();
+                    }
+                }
+                Dungeon.hero.pos = alLado;
+                if (Dungeon.hero.sprite != null) Dungeon.hero.sprite.place(alLado);
+                Dungeon.observe();
+                reportar("buscarJefe: " + jefe.getClass().getSimpleName()
+                    + " en " + jefe.pos + " hp=" + jefe.HP + "/" + jefe.HT
+                    + ", heroe al lado en " + alLado + " con " + Dungeon.hero.HP + " hp");
+            } else if ("golpearJefe".equals(cmd)) {
+                com.github.dachhack.sprout.actors.mobs.Mob jefe = jefe();
+                if (jefe == null) {
+                    reportar("golpearJefe: ya no hay jefe -- piso=" + Dungeon.depth
+                        + " heroeHP=" + Dungeon.hero.HP
+                        + " salida=" + Dungeon.level.map[Dungeon.level.exit]);
+                    return;
+                }
+                Dungeon.hero.HP = Dungeon.hero.HT;   // que no se muera a medias
+                // Pegarse al jefe cada turno. Sin esto el heroe intenta
+                // CAMINAR hasta el, y en cuanto una telaraña lo atrapa el
+                // registro se llena de "You can't move!" y la prueba mide
+                // el pathfinding en vez de la pelea.
+                int w2 = com.github.dachhack.sprout.levels.Level.getWidth();
+                for (int d = 0; d < 8; d++) {
+                    int v = com.github.dachhack.sprout.FirstPerson
+                        .neighbour(jefe.pos, d, w2);
+                    if (v >= 0 && com.github.dachhack.sprout.levels.Level.passable[v]
+                        && com.github.dachhack.sprout.actors.Actor.findChar(v) == null) {
+                        Dungeon.hero.pos = v;
+                        if (Dungeon.hero.sprite != null) Dungeon.hero.sprite.place(v);
+                        break;
+                    }
+                }
+                Dungeon.observe();
+                reportar("golpeJefe " + jefe.getClass().getSimpleName()
+                    + " hp=" + jefe.HP + "/" + jefe.HT
+                    + " heroeHP=" + Dungeon.hero.HP
+                    + " manchas=" + Dungeon.level.blobs.size()
+                    + " bichos=" + Dungeon.level.mobs.size());
+                GameScene.handleCell(jefe.pos);
+            } else if ("tomarLlave".equals(cmd)) {
+                // La salida del piso de jefe se abre con la SkeletonKey que
+                // suelta el jefe al morir, no sola: LOCKED_EXIT + Unlock es
+                // el diseño del original.
+                // heaps es SparseArray, no Map: se recorre por indice.
+                int donde = -1;
+                for (int i = 0; i < Dungeon.level.heaps.size() && donde < 0; i++) {
+                    com.github.dachhack.sprout.items.Heap h =
+                        Dungeon.level.heaps.valueAt(i);
+                    if (h == null) continue;
+                    for (com.github.dachhack.sprout.items.Item it : h.items) {
+                        if (it instanceof com.github.dachhack.sprout.items.keys.SkeletonKey) {
+                            donde = Dungeon.level.heaps.keyAt(i); break;
+                        }
+                    }
+                }
+                if (donde < 0) { reportar("tomarLlave: no hay SkeletonKey en el suelo"); return; }
+                Dungeon.hero.pos = donde;
+                if (Dungeon.hero.sprite != null) Dungeon.hero.sprite.place(donde);
+                Dungeon.observe();
+                // Dos caminos, para saber en cual se pierde: handleCell pasa
+                // por CellSelector (que tiene enabled/listener propios) y
+                // hero.handle va derecho a la logica.
+                reportar("tomarLlave: llave en " + donde
+                    + " apuntando=" + GameScene.targeting()
+                    + " -- probando handleCell");
+                GameScene.handleCell(donde);
+            } else if ("alLadoDeLaLlave".equals(cmd)) {
+                // Dejar al heroe junto a la llave y MIRANDOLA, para que la
+                // recoja caminando con el teclado: el camino de un jugador,
+                // sin teletransportes ni llamadas directas a la logica.
+                int donde = -1;
+                for (int i = 0; i < Dungeon.level.heaps.size() && donde < 0; i++) {
+                    com.github.dachhack.sprout.items.Heap h =
+                        Dungeon.level.heaps.valueAt(i);
+                    if (h == null) continue;
+                    for (com.github.dachhack.sprout.items.Item it : h.items) {
+                        if (it instanceof com.github.dachhack.sprout.items.keys.SkeletonKey) {
+                            donde = Dungeon.level.heaps.keyAt(i); break;
+                        }
+                    }
+                }
+                if (donde < 0) { reportar("alLadoDeLaLlave: no hay llave"); return; }
+                int w3 = com.github.dachhack.sprout.levels.Level.getWidth();
+                int[] lados = { -w3, w3, -1, 1 };
+                int puesto = -1;
+                for (int d : lados) {
+                    int c = donde + d;
+                    if (c > 0 && c < Dungeon.level.map.length
+                        && com.github.dachhack.sprout.levels.Level.passable[c]
+                        && com.github.dachhack.sprout.actors.Actor.findChar(c) == null) {
+                        puesto = c; break;
+                    }
+                }
+                if (puesto < 0) { reportar("alLadoDeLaLlave: sin hueco al lado"); return; }
+                Dungeon.hero.pos = puesto;
+                if (Dungeon.hero.sprite != null) Dungeon.hero.sprite.place(puesto);
+                Dungeon.observe();
+                celdaPrueba = donde;
+                reportar("alLadoDeLaLlave: llave en " + donde
+                    + ", heroe en " + puesto + " (apuntar en la siguiente orden)");
+            } else if ("probarPaso".equals(cmd)) {
+                // Que acción decide el juego para la casilla de la llave.
+                // Move significa que el monton no se vio; PickUp significa
+                // que se creo y algo la cancelo despues.
+                int c = celdaPrueba;
+                com.github.dachhack.sprout.items.Heap h = Dungeon.level.heaps.get(c);
+                com.github.dachhack.sprout.actors.Char quien =
+                    com.github.dachhack.sprout.actors.Actor.findChar(c);
+                reportar("probarPaso: celda=" + c
+                    + " monton=" + (h != null ? h.type.toString() : "no")
+                    + " vacio=" + (h != null && h.isEmpty())
+                    + " ocupada por=" + (quien == null ? "nadie" : quien.getClass().getSimpleName())
+                    + " enVista=" + com.github.dachhack.sprout.levels.Level.fieldOfView[c]
+                    + " heroe=" + Dungeon.hero.pos
+                    + " listo=" + Dungeon.hero.ready);
+                GameScene.handleCell(c);
+                reportar("   tras handleCell: accion=" + Dungeon.hero.curAction
+                    + " heroe=" + Dungeon.hero.pos);
+            } else if ("alLadoDeLaSalida".equals(cmd)) {
+                int sal = Dungeon.level.exit;
+                int w4 = com.github.dachhack.sprout.levels.Level.getWidth();
+                int[] lados = { -w4, w4, -1, 1 };
+                int puesto = -1;
+                for (int d : lados) {
+                    int c = sal + d;
+                    if (c > 0 && c < Dungeon.level.map.length
+                        && com.github.dachhack.sprout.levels.Level.passable[c]
+                        && com.github.dachhack.sprout.actors.Actor.findChar(c) == null) {
+                        puesto = c; break;
+                    }
+                }
+                if (puesto < 0) { reportar("alLadoDeLaSalida: sin hueco"); return; }
+                Dungeon.hero.pos = puesto;
+                if (Dungeon.hero.sprite != null) Dungeon.hero.sprite.place(puesto);
+                Dungeon.observe();
+                celdaPrueba = sal;
+                reportar("alLadoDeLaSalida: salida=" + sal + " heroe=" + puesto
+                    + " terreno=" + Dungeon.level.map[sal]);
+            } else if ("tomarLlaveDirecto".equals(cmd)) {
+                int donde = Dungeon.hero.pos;
+                com.github.dachhack.sprout.items.Heap h =
+                    Dungeon.level.heaps.get(donde);
+                reportar("tomarLlaveDirecto: monton aqui=" + (h != null)
+                    + " -- llamando hero.handle(" + donde + ")");
+                reportar("   handle devolvio " + Dungeon.hero.handle(donde)
+                    + " accion=" + Dungeon.hero.curAction);
+            } else if ("verLlave".equals(cmd)) {
+                com.github.dachhack.sprout.items.keys.SkeletonKey k =
+                    Dungeon.hero.belongings.getItem(
+                        com.github.dachhack.sprout.items.keys.SkeletonKey.class);
+                com.github.dachhack.sprout.items.Heap aqui =
+                    Dungeon.level.heaps.get(Dungeon.hero.pos);
+                StringBuilder q = new StringBuilder();
+                if (aqui != null) {
+                    for (com.github.dachhack.sprout.items.Item it : aqui.items) {
+                        q.append(it.getClass().getSimpleName()).append(' ');
+                    }
+                }
+                reportar("verLlave: en la mochila=" + (k != null)
+                    + " mochila=" + mochila()
+                    + " heroe=" + Dungeon.hero.pos
+                    + " monton aqui=" + (aqui != null ? ("[" + q + "]") : "no")
+                    + " listo=" + Dungeon.hero.ready
+                    + " accion=" + Dungeon.hero.curAction
+                    + " ventana=" + GameScene.windowOpen());
+            } else if ("verSalida".equals(cmd)) {
+                int t = Dungeon.level.map[Dungeon.level.exit];
+                String nombre = t == com.github.dachhack.sprout.levels.Terrain.LOCKED_EXIT
+                        ? "LOCKED_EXIT (cerrada)"
+                    : t == com.github.dachhack.sprout.levels.Terrain.UNLOCKED_EXIT
+                        ? "UNLOCKED_EXIT (abierta)"
+                    : t == com.github.dachhack.sprout.levels.Terrain.EXIT
+                        ? "EXIT (normal)" : ("terreno " + t);
+                reportar("verSalida: piso=" + Dungeon.depth
+                    + " salida=" + Dungeon.level.exit + " -> " + nombre
+                    + " jefe=" + (jefe() == null ? "muerto/ausente" : "vivo")
+                    + " bichos=" + Dungeon.level.mobs.size());
+            } else if ("esperar".equals(cmd)) {
+                // Gastar turnos sin moverse: hay cosas que ocurren un turno
+                // despues de matar al jefe.
+                Dungeon.hero.spend(1f);
+                Dungeon.hero.next();
+                reportar("esperar: listo=" + Dungeon.hero.ready);
             } else if ("caer".equals(cmd)) {
                 // El reporte de Leonel, tal cual: tirarse a un chasm.
                 reportar("orden caer: desde " + Dungeon.hero.pos
@@ -428,6 +631,36 @@ public final class Diagnostico {
         reportar("apuntarA " + celda + ": yaw=" + yaw + " pitch=" + pitch
             + " dist=" + largo + " ojo=(" + cam.eyeX + "," + cam.eyeY
             + "," + cam.eyeZ + ")");
+    }
+
+    /** El jefe del piso, si lo hay. */
+    private static com.github.dachhack.sprout.actors.mobs.Mob jefe() {
+        if (Dungeon.level == null) return null;
+        // El Goo de verdad manda. Sprouted suelta PoisonGoo como secuaces
+        // ADEMAS de usarlo como segunda fase, asi que tomar "el primer
+        // jefe que aparezca" reparte los golpes entre el jefe y su tropa
+        // -- y Goo se regenera en el agua mas rapido de lo que se le pega.
+        // Sin Goo, gana el PoisonGoo de mas vida maxima: la segunda fase
+        // trae 100 y los secuaces 50.
+        com.github.dachhack.sprout.actors.mobs.Mob mejorGoo = null;
+        for (com.github.dachhack.sprout.actors.mobs.Mob m
+                : Dungeon.level.mobs.toArray(
+                    new com.github.dachhack.sprout.actors.mobs.Mob[0])) {
+            if (m instanceof com.github.dachhack.sprout.actors.mobs.Goo) {
+                return m;
+            }
+            if (m instanceof com.github.dachhack.sprout.actors.mobs.PoisonGoo
+                && (mejorGoo == null || m.HT > mejorGoo.HT)) {
+                mejorGoo = m;
+            }
+            if (m instanceof com.github.dachhack.sprout.actors.mobs.Tengu
+                || m instanceof com.github.dachhack.sprout.actors.mobs.DM300
+                || m instanceof com.github.dachhack.sprout.actors.mobs.SkeletonKing
+                || m instanceof com.github.dachhack.sprout.actors.mobs.ThiefKing) {
+                return m;
+            }
+        }
+        return mejorGoo;
     }
 
     private static String estadoArma() {
