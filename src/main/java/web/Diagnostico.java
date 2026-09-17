@@ -67,10 +67,7 @@ public final class Diagnostico {
                 // pedir a una casilla sin explorar, y lo que se prueba aqui
                 // es la transicion de piso, no el pathfinding.
                 if (Dungeon.level != null && Dungeon.hero != null) {
-                    Dungeon.hero.pos = Dungeon.level.exit;
-                    if (Dungeon.hero.sprite != null) {
-                        Dungeon.hero.sprite.place(Dungeon.hero.pos);
-                    }
+                    moverHeroe(Dungeon.level.exit);
                     reportar("orden bajarYa: heroe puesto en " + Dungeon.hero.pos);
                     GameScene.handleCell(Dungeon.level.exit);
                 }
@@ -105,10 +102,7 @@ public final class Diagnostico {
                 // es el camino de Class.forName -- justo donde TeaVM se
                 // rompe si a una clase le falta metadata.
                 if (Dungeon.level != null && Dungeon.hero != null) {
-                    Dungeon.hero.pos = Dungeon.level.entrance;
-                    if (Dungeon.hero.sprite != null) {
-                        Dungeon.hero.sprite.place(Dungeon.hero.pos);
-                    }
+                    moverHeroe(Dungeon.level.entrance);
                     reportar("orden subirYa: desde piso " + Dungeon.depth);
                     GameScene.handleCell(Dungeon.level.entrance);
                 }
@@ -220,10 +214,7 @@ public final class Diagnostico {
                     }
                 }
                 if (desde < 0) { reportar("sin sitio desde donde mirar"); return; }
-                Dungeon.hero.pos = desde;
-                if (Dungeon.hero.sprite != null) {
-                    Dungeon.hero.sprite.place(desde);
-                }
+                moverHeroe(desde);
                 Dungeon.observe();
                 celdaPrueba = salida;
                 reportar("verEscalera: salida=" + salida + " mirando desde "
@@ -231,9 +222,7 @@ public final class Diagnostico {
             } else if ("reubicar".equals(cmd)) {
                 int c = Dungeon.level.randomRespawnCell();
                 if (c < 0) { reportar("sin sitio"); return; }
-                Dungeon.hero.pos = c;
-                if (Dungeon.hero.sprite != null) Dungeon.hero.sprite.place(c);
-                Dungeon.observe();
+                moverHeroe(c);Dungeon.observe();
                 reportar("reubicar: heroe a " + c
                     + " (entrada=" + Dungeon.level.entrance
                     + " salida=" + Dungeon.level.exit + ")");
@@ -261,16 +250,11 @@ public final class Diagnostico {
                 }
                 if (elegida < 0) { reportar("sin casilla abierta"); return; }
                 celdaPrueba = elegida;
-                Dungeon.hero.pos = elegida;
-                if (Dungeon.hero.sprite != null) Dungeon.hero.sprite.place(elegida);
-                Dungeon.observe();
+                moverHeroe(elegida);Dungeon.observe();
                 reportar("reubicarAbierto: heroe a " + elegida + " " + vecinos());
             } else if ("volverAbierto".equals(cmd)) {
                 if (celdaPrueba < 0) { reportar("sin casilla"); return; }
-                Dungeon.hero.pos = celdaPrueba;
-                if (Dungeon.hero.sprite != null) {
-                    Dungeon.hero.sprite.place(celdaPrueba);
-                }
+                moverHeroe(celdaPrueba);
                 Dungeon.observe();
             } else if ("pelear".equals(cmd)) {
                 // Un bicho pegado al heroe y a darse. Lo que se mira no es
@@ -427,9 +411,7 @@ public final class Diagnostico {
                         Dungeon.hero.belongings.weapon.upgrade();
                     }
                 }
-                Dungeon.hero.pos = alLado;
-                if (Dungeon.hero.sprite != null) Dungeon.hero.sprite.place(alLado);
-                Dungeon.observe();
+                moverHeroe(alLado);Dungeon.observe();
                 reportar("buscarJefe: " + jefe.getClass().getSimpleName()
                     + " en " + jefe.pos + " hp=" + jefe.HP + "/" + jefe.HT
                     + ", heroe al lado en " + alLado + " con " + Dungeon.hero.HP + " hp");
@@ -452,9 +434,7 @@ public final class Diagnostico {
                         .neighbour(jefe.pos, d, w2);
                     if (v >= 0 && com.github.dachhack.sprout.levels.Level.passable[v]
                         && com.github.dachhack.sprout.actors.Actor.findChar(v) == null) {
-                        Dungeon.hero.pos = v;
-                        if (Dungeon.hero.sprite != null) Dungeon.hero.sprite.place(v);
-                        break;
+                        moverHeroe(v);break;
                     }
                 }
                 Dungeon.observe();
@@ -481,9 +461,7 @@ public final class Diagnostico {
                     }
                 }
                 if (donde < 0) { reportar("tomarLlave: no hay SkeletonKey en el suelo"); return; }
-                Dungeon.hero.pos = donde;
-                if (Dungeon.hero.sprite != null) Dungeon.hero.sprite.place(donde);
-                Dungeon.observe();
+                moverHeroe(donde);Dungeon.observe();
                 // Dos caminos, para saber en cual se pierde: handleCell pasa
                 // por CellSelector (que tiene enabled/listener propios) y
                 // hero.handle va derecho a la logica.
@@ -519,9 +497,7 @@ public final class Diagnostico {
                     }
                 }
                 if (puesto < 0) { reportar("alLadoDeLaLlave: sin hueco al lado"); return; }
-                Dungeon.hero.pos = puesto;
-                if (Dungeon.hero.sprite != null) Dungeon.hero.sprite.place(puesto);
-                Dungeon.observe();
+                moverHeroe(puesto);Dungeon.observe();
                 celdaPrueba = donde;
                 reportar("alLadoDeLaLlave: llave en " + donde
                     + ", heroe en " + puesto + " (apuntar en la siguiente orden)");
@@ -557,12 +533,65 @@ public final class Diagnostico {
                     }
                 }
                 if (puesto < 0) { reportar("alLadoDeLaSalida: sin hueco"); return; }
-                Dungeon.hero.pos = puesto;
-                if (Dungeon.hero.sprite != null) Dungeon.hero.sprite.place(puesto);
-                Dungeon.observe();
+                moverHeroe(puesto);Dungeon.observe();
                 celdaPrueba = sal;
                 reportar("alLadoDeLaSalida: salida=" + sal + " heroe=" + puesto
                     + " terreno=" + Dungeon.level.map[sal]);
+            } else if ("alLadoDeLaEntrada".equals(cmd)) {
+                int ent = Dungeon.level.entrance;
+                int w6 = com.github.dachhack.sprout.levels.Level.getWidth();
+                int[] lados6 = { -w6, w6, -1, 1 };
+                int puesto6 = -1;
+                for (int d : lados6) {
+                    int c = ent + d;
+                    if (c > 0 && c < Dungeon.level.map.length
+                        && com.github.dachhack.sprout.levels.Level.passable[c]
+                        && com.github.dachhack.sprout.actors.Actor.findChar(c) == null) {
+                        puesto6 = c; break;
+                    }
+                }
+                if (puesto6 < 0) { reportar("alLadoDeLaEntrada: sin hueco"); return; }
+                moverHeroe(puesto6);Dungeon.observe();
+                celdaPrueba = ent;
+                reportar("alLadoDeLaEntrada: entrada=" + ent + " heroe=" + puesto6
+                    + " terreno=" + Dungeon.level.map[ent]);
+            } else if ("comoLlegarA".equals(cmd)) {
+                // Que tecla o par de teclas lleva de verdad a celdaPrueba.
+                // Las ocho direcciones, no cuatro: con la camara mirando en
+                // diagonal las cuatro flechas dan las cuatro diagonales del
+                // mapa, y a la casilla de al lado se llega con dos teclas.
+                if (celdaPrueba < 0) { reportar("comoLlegarA: sin objetivo"); return; }
+                int w8 = com.github.dachhack.sprout.levels.Level.getWidth();
+                String[] porDir = {
+                    "ArrowUp", "ArrowUp+ArrowRight", "ArrowRight",
+                    "ArrowRight+ArrowDown", "ArrowDown", "ArrowDown+ArrowLeft",
+                    "ArrowLeft", "ArrowLeft+ArrowUp" };
+                String cual = "NINGUNA";
+                for (int k = 0; k < 8; k++) {
+                    int v = com.github.dachhack.sprout.FirstPerson
+                        .neighbour(Dungeon.hero.pos, k, w8);
+                    if (v == celdaPrueba) { cual = porDir[k]; break; }
+                }
+                reportar("comoLlegarA: objetivo=" + celdaPrueba
+                    + " heroe=" + Dungeon.hero.pos
+                    + " mirando=" + com.github.dachhack.sprout.FirstPerson.facing8()
+                    + " tecla=" + cual);
+            } else if ("mirarObjetivo".equals(cmd)) {
+                // Con la API del propio juego, no forzando el yaw: update()
+                // lo vuelve a mover cada cuadro y poner el angulo a mano no
+                // sobrevive al siguiente.
+                if (celdaPrueba < 0) { reportar("mirarObjetivo: sin objetivo"); return; }
+                com.github.dachhack.sprout.FirstPerson.faceCell(celdaPrueba);
+                reportar("mirarObjetivo: encarando " + celdaPrueba);
+            } else if ("carneEnEscalera".equals(cmd)) {
+                // El caso que sospecho: algo tirado justo en la escalera.
+                // Hero.handle mira el monton ANTES que la escalera, asi que
+                // pisarla podria recoger en vez de bajar.
+                int sal7 = Dungeon.level.exit;
+                Dungeon.level.drop(
+                    new com.github.dachhack.sprout.items.food.MysteryMeat(), sal7);
+                reportar("carneEnEscalera: carne en la salida " + sal7
+                    + " monton=" + (Dungeon.level.heaps.get(sal7) != null));
             } else if ("tomarLlaveDirecto".equals(cmd)) {
                 int donde = Dungeon.hero.pos;
                 com.github.dachhack.sprout.items.Heap h =
@@ -622,6 +651,25 @@ public final class Diagnostico {
 
     private static int celdaPrueba = -1;
     private static int pisoGen = 0;
+
+    /**
+     * Mueve al heroe manteniendo el registro de actores al dia.
+     *
+     * Cambiar Dungeon.hero.pos a pelo deja Actor.chars apuntando a la
+     * casilla vieja, y findChar sigue diciendo que ahi hay alguien. Eso me
+     * costo un "subir por escaleras esta roto" que no existia: el heroe
+     * habia aparecido en la entrada, yo lo teletransportaba al lado, y
+     * getCloser se negaba a volver a la entrada porque la creia ocupada
+     * -- por el propio heroe.
+     */
+    private static void moverHeroe(int celda) {
+        com.github.dachhack.sprout.actors.Actor.freeCell(Dungeon.hero.pos);
+        Dungeon.hero.pos = celda;
+        com.github.dachhack.sprout.actors.Actor.occupyCell(Dungeon.hero);
+        if (Dungeon.hero.sprite != null) {
+            Dungeon.hero.sprite.place(celda);
+        }
+    }
 
     private static int mochila() {
         return Dungeon.hero == null ? -1
