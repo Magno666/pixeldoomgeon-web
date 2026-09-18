@@ -53,6 +53,7 @@ public final class Diagnostico {
     // --- muestreo del paso ---
     private static float[] alturas = null;
     private static float[] avances = null;
+    private static float[] lados = null;
     private static int muestra = 0;
 
     /** Guarda la altura del ojo y el avance, un dato por cuadro. Es la
@@ -64,7 +65,11 @@ public final class Diagnostico {
             com.github.dachhack.sprout.FirstPerson.camera();
         if (cam == null) return;
         alturas[muestra] = cam.eyeY;
-        avances[muestra] = (float) Math.sqrt(cam.eyeX * cam.eyeX + cam.eyeZ * cam.eyeZ);
+        // eyeX a secas, no la distancia al origen: el balanceo lateral es
+        // una desviacion perpendicular al avance, y una distancia al origen
+        // la esconde.
+        avances[muestra] = cam.eyeX;
+        lados[muestra] = cam.eyeZ;
         muestra++;
     }
 
@@ -419,6 +424,7 @@ public final class Diagnostico {
             } else if ("medirPaso".equals(cmd)) {
                 alturas = new float[240];
                 avances = new float[240];
+                lados = new float[240];
                 muestra = 0;
                 reportar("medirPaso: grabando " + alturas.length + " cuadros");
             } else if ("verPaso".equals(cmd)) {
@@ -433,10 +439,15 @@ public final class Diagnostico {
                 for (int i = 0; i < muestra; i += 2) {
                     sb.append(' ').append(Math.round((alturas[i] - min) * 1000f));
                 }
-                sb.append("\n   avance:");
+                sb.append("\n   eyeX:");
                 float base = avances[0];
                 for (int i = 0; i < muestra; i += 2) {
                     sb.append(' ').append(Math.round((avances[i] - base) * 100f));
+                }
+                sb.append("\n   eyeZ:");
+                float baseZ = lados[0];
+                for (int i = 0; i < muestra; i += 2) {
+                    sb.append(' ').append(Math.round((lados[i] - baseZ) * 100f));
                 }
                 reportar(sb.toString());
                 alturas = null;

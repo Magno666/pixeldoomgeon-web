@@ -33,6 +33,7 @@ public final class Entrada {
                                 GLSurfaceView vista) {
         instalar();
         instalarTeclado();
+        instalarPuntero();
     }
 
     /**
@@ -45,7 +46,9 @@ public final class Entrada {
      * en JS, donde el rectangulo real esta a mano.
      */
     public static void bombear(GLSurfaceView vista) {
+        avisarSiSeJuega();
         bombearTeclas();
+        bombearMirada();
         int n = colaLargo();
         if (n == 0) return;
 
@@ -98,7 +101,15 @@ public final class Entrada {
         "  if (!abajo) return;" +
         "  if (accion === 2 && e.buttons === 0) return;" +
         "  if (accion === 1) abajo = false;" +
-        "  var p = aLienzo(e.clientX, e.clientY);" +
+        "  var p;" +
+        // Capturado, clientX/clientY se congelan donde se hizo clic. El
+        // clic va entonces al centro de la pantalla, que es lo que se
+        // esta mirando.
+        "  if (document.pointerLockElement === c) {" +
+        "    p = [c.width / 2, c.height / 2];" +
+        "  } else {" +
+        "    p = aLienzo(e.clientX, e.clientY);" +
+        "  }" +
         "  q.push(accion, 0, 1, 0, p[0], p[1]);" +
         "}; }" +
         "c.addEventListener('mousedown', raton(0));" +
@@ -220,6 +231,79 @@ public final class Entrada {
         "  q.push(1,0, 2,0, 3,0, 4,0, 5,0, 6,0);" +
         "});")
     private static native void instalarTeclado();
+
+    /**
+     * Raton capturado. Sin esto, en una computadora hay que mantener el
+     * boton apretado para mirar, que es como se mueve la camara en un
+     * juego de estrategia, no en uno en primera persona.
+     */
+    /**
+     * Le dice a JS si ahora mismo se esta jugando en primera persona.
+     *
+     * Capturar el puntero en la pantalla de titulo rompe los menus: con el
+     * puntero preso clientX/clientY se congelan y TODO clic se va al centro
+     * de la pantalla, asi que los botones dejan de responder. Y si se
+     * captura con el inventario abierto, no puedes tocar un objeto.
+     */
+    private static void avisarSiSeJuega() {
+        boolean jugando = com.github.dachhack.sprout.FirstPerson.enabled
+            && com.github.dachhack.sprout.Dungeon.level != null
+            && !com.github.dachhack.sprout.scenes.GameScene.windowOpen();
+        marcarJugando(jugando);
+    }
+
+    @JSBody(params = "si", script =
+        "window.__pdJugando = si;" +
+        // Si se abrio una ventana o se salio de la mazmorra, soltar el
+        // puntero: con el preso no se puede tocar nada del inventario.
+        "if (!si && document.pointerLockElement && document.exitPointerLock) {" +
+        "  try { document.exitPointerLock(); } catch (e) {}" +
+        "}")
+    private static native void marcarJugando(boolean si);
+
+    private static void bombearMirada() {
+        int n = miradaLargo();
+        if (n < 2) return;
+        float dx = 0f, dy = 0f;
+        for (int i = 0; i + 1 < n; i += 2) {
+            dx += (float) miradaLeer(i);
+            dy += (float) miradaLeer(i + 1);
+        }
+        miradaLimpiar();
+        if (dx != 0f || dy != 0f) {
+            com.github.dachhack.sprout.FirstPersonControls.mirar(dx, dy);
+        }
+    }
+
+    @JSBody(script =
+        "if (window.__pdPuntero) return; window.__pdPuntero = true;" +
+        "var c = document.getElementById('juego');" +
+        "if (!c) return;" +
+        "var q = window.__pdMirada = [];" +
+        "c.addEventListener('mousedown', function () {" +
+        "  if (!window.__pdJugando) return;" +
+        "  if (document.pointerLockElement !== c && c.requestPointerLock) {" +
+        "    try { c.requestPointerLock(); } catch (e) {}" +
+        "  }" +
+        "});" +
+        "document.addEventListener('mousemove', function (e) {" +
+        "  if (document.pointerLockElement !== c) return;" +
+        "  q.push(e.movementX || 0, e.movementY || 0);" +
+        "});" +
+        "document.addEventListener('pointerlockchange', function () {" +
+        "  var dentro = document.pointerLockElement === c;" +
+        "  if (window.__pdAvisoPuntero) window.__pdAvisoPuntero(dentro);" +
+        "});")
+    private static native void instalarPuntero();
+
+    @JSBody(script = "return window.__pdMirada ? window.__pdMirada.length : 0;")
+    private static native int miradaLargo();
+
+    @JSBody(params = "i", script = "return window.__pdMirada[i];")
+    private static native double miradaLeer(int i);
+
+    @JSBody(script = "if (window.__pdMirada) window.__pdMirada.length = 0;")
+    private static native void miradaLimpiar();
 
     @JSBody(script = "return window.__pdTeclas ? window.__pdTeclas.length : 0;")
     private static native int teclasLargo();

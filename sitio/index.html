@@ -47,6 +47,23 @@
   #volver:hover { color: #DCE3DD; }
   #volver.ido { opacity: 0; pointer-events: none; }
 
+  /* Sólo tiene sentido con ratón: en un teléfono no hay puntero que
+     capturar, y el aviso estorbaría encima del stick. */
+  #raton {
+    position: fixed; z-index: 6;
+    left: 50%; transform: translateX(-50%);
+    bottom: max(1.1rem, env(safe-area-inset-bottom));
+    padding: .45rem .9rem; border-radius: 99px;
+    background: rgba(11,13,12,.82); border: 1px solid #262C28;
+    color: #DCE3DD; font-size: .8rem; white-space: nowrap;
+    pointer-events: none; transition: opacity .4s;
+  }
+  #raton kbd {
+    font: inherit; background: #262C28; border-radius: .25rem;
+    padding: .05rem .3rem;
+  }
+  @media (pointer: coarse) { #raton { display: none; } }
+
   /* El juego se dibuja para pantalla ancha -- el HUD, las ventanas y los
      botones asumen esa proporción (setRequestedOrientation pide horizontal
      en Android; aquí no hay forma de forzar la pantalla, así que se pide
@@ -86,6 +103,8 @@
   <p id="pista">Cargando el juego completo. La primera vez tarda.</p>
 </div>
 
+<div id="raton" hidden>Haz clic para mirar con el ratón · <kbd>Esc</kbd> para soltarlo</div>
+
 <div id="gira">
   <svg viewBox="0 0 24 24" fill="none" stroke="#E0A83A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
     <rect x="6" y="3" width="12" height="18" rx="2"></rect>
@@ -99,6 +118,22 @@
 <script src="juego.js"></script>
 <script>
   main();
+
+  // El aviso del ratón: aparece cuando el juego ya corre y se va en cuanto
+  // capturas el puntero. Vuelve si lo sueltas, porque entonces hace falta
+  // otra vez.
+  (function () {
+    var aviso = document.getElementById('raton');
+    if (!aviso || window.matchMedia('(pointer: coarse)').matches) return;
+    // Sólo mientras se juega: en el menú no hay nada que mirar, y ahí el
+    // puntero ni siquiera se captura.
+    var preso = false;
+    window.__pdAvisoPuntero = function (dentro) { preso = dentro; };
+    setInterval(function () {
+      var toca = !!window.__pdJugando && !preso;
+      aviso.hidden = !toca;
+    }, 500);
+  })();
   // El enlace de vuelta se va solo a los diez segundos: para entonces ya
   // estás jugando y un botón encima de la pantalla sólo estorba.
   setTimeout(function () {
