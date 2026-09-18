@@ -912,6 +912,14 @@ public final class Diagnostico {
                     + "\n   en la linea: " + linea.toString().trim()
                     + "\n   solo SOLID (antes): " + sa.toString().trim()
                     + "\n   + tapa vista (hoy): " + sb.toString().trim());
+            } else if ("punteroLibre".equals(cmd)) {
+                com.github.dachhack.sprout.ShatteredPixelDungeon.punteroLibre(true);
+                reportar("punteroLibre: encendido="
+                    + com.github.dachhack.sprout.FirstPersonControls.punteroLibre);
+            } else if ("punteroPreso".equals(cmd)) {
+                com.github.dachhack.sprout.ShatteredPixelDungeon.punteroLibre(false);
+                reportar("punteroPreso: libre="
+                    + com.github.dachhack.sprout.FirstPersonControls.punteroLibre);
             } else if ("verEmisores".equals(cmd)) {
                 reportar("verEmisores: visibles="
                     + GameScene.emisoresPlanosVisibles() + " de "

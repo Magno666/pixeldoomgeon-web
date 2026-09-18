@@ -211,7 +211,11 @@ public final class Entrada {
         "  ArrowRight: 2, KeyD: 2," +
         "  ArrowDown: 3, KeyS: 3," +
         "  ArrowLeft: 4, KeyA: 4," +
-        "  KeyQ: 5, KeyE: 6" +
+        "  KeyQ: 5, KeyE: 6," +
+        // Pedidas en la caja de comentarios. Buscar NO puede ser S, que es
+        // caminar hacia atras; F de find. Espacio es esperar un turno, que
+        // es el otro boton de la barra al que no se llegaba sin el raton.
+        "  KeyI: 7, KeyF: 8, Space: 9" +
         "};" +
         "function manda(e, abajo) {" +
         "  var c = mapa[e.code];" +
@@ -251,7 +255,18 @@ public final class Entrada {
             && com.github.dachhack.sprout.Dungeon.level != null
             && !com.github.dachhack.sprout.scenes.GameScene.windowOpen();
         marcarJugando(jugando);
+        marcarPunteroLibre(
+            com.github.dachhack.sprout.FirstPersonControls.punteroLibre);
     }
+
+    @JSBody(params = "si", script =
+        "window.__pdPunteroLibre = si;" +
+        // Si acaban de encenderlo con el puntero ya preso, soltarlo ahora
+        // mismo: si no, el ajuste no hace nada hasta la siguiente partida.
+        "if (si && document.pointerLockElement && document.exitPointerLock) {" +
+        "  try { document.exitPointerLock(); } catch (e) {}" +
+        "}")
+    private static native void marcarPunteroLibre(boolean si);
 
     @JSBody(params = "si", script =
         "window.__pdJugando = si;" +
@@ -281,14 +296,26 @@ public final class Entrada {
         "var c = document.getElementById('juego');" +
         "if (!c) return;" +
         "var q = window.__pdMirada = [];" +
+        // Con el puntero libre no se captura nada: el cursor se queda a la
+        // vista para poder tocar la barra y la mochila, y mirar vuelve a
+        // ser arrastrar con el boton apretado, como antes de que existiera
+        // la captura. Pedido desde la pagina.
+        "var arrastra = false;" +
         "c.addEventListener('mousedown', function () {" +
         "  if (!window.__pdJugando) return;" +
+        "  if (window.__pdPunteroLibre) { arrastra = true; return; }" +
         "  if (document.pointerLockElement !== c && c.requestPointerLock) {" +
         "    try { c.requestPointerLock(); } catch (e) {}" +
         "  }" +
         "});" +
+        // En document y no en el canvas: si sueltas el boton fuera de la
+        // ventana, el canvas nunca se entera y la vista se queda pegada al
+        // raton para siempre.
+        "document.addEventListener('mouseup', function () { arrastra = false; });" +
+        "window.addEventListener('blur', function () { arrastra = false; });" +
         "document.addEventListener('mousemove', function (e) {" +
-        "  if (document.pointerLockElement !== c) return;" +
+        "  var preso = document.pointerLockElement === c;" +
+        "  if (!preso && !(window.__pdPunteroLibre && arrastra)) return;" +
         "  q.push(e.movementX || 0, e.movementY || 0);" +
         "});" +
         "document.addEventListener('pointerlockchange', function () {" +
