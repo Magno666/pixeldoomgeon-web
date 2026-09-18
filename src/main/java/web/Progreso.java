@@ -24,6 +24,7 @@ public final class Progreso {
     public static void revisar() {
         if (!puesto) {
             puesto = true;
+            Telemetria.plataforma = "web";
             Telemetria.dispositivo = navegador();
             Telemetria.enviador = new Telemetria.Enviador() {
                 @Override
