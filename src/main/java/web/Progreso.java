@@ -1,78 +1,73 @@
-/* PixelDoomgeon — progreso anonimo. GPL-3.0-or-later */
+/* PixelDoomgeon — el transporte de la telemetria en el navegador.
+   GPL-3.0-or-later */
 package web;
 
-import com.github.dachhack.sprout.Dungeon;
+import com.github.dachhack.sprout.Telemetria;
 
 import org.teavm.jso.JSBody;
 
 /**
- * Cuenta hasta donde llega la gente y donde muere.
+ * La telemetria vive en el juego ({@link Telemetria}) porque el APK
+ * necesita exactamente lo mismo. Aqui solo queda lo que si es del
+ * navegador: mandar el paquete con fetch, y decir que navegador es.
  *
- * Existe por una pregunta concreta que no se podia contestar: tres
- * personas dijeron en r/PixelDungeon que no pasaron del piso 2, y sin
- * datos no hay forma de saber si es dificultad, aburrimiento o algo
- * roto. Son cosas opuestas -- una se arregla con equilibrio y la otra
- * con contenido.
- *
- * Se manda lo minimo para contestar eso: el numero del piso y, al morir,
- * la causa que el propio juego escribe. Nada de partidas, nada de
- * inventarios, ninguna IP -- el servidor agrupa por un hash con sal,
- * igual que los votos de la encuesta.
- *
- * No toca el juego: mira Dungeon.depth y si el heroe sigue vivo una vez
- * por cuadro y dispara cuando eso cambia. Un gancho dentro de la logica
- * seria mas limpio de leer y mucho mas facil de romper.
+ * Antes toda la logica estaba en este archivo. Se movio al juego cuando
+ * hubo APK, no por limpieza: duplicarla habria significado dos sitios
+ * donde arreglar el mismo dato mal contado.
  */
 public final class Progreso {
 
     private Progreso() {}
 
-    private static int pisoVisto = 0;
-    private static boolean estabaVivo = false;
+    private static boolean puesto;
 
     public static void revisar() {
-
-        if (Dungeon.hero == null || Dungeon.level == null) {
-            return;
+        if (!puesto) {
+            puesto = true;
+            Telemetria.dispositivo = navegador();
+            Telemetria.enviador = new Telemetria.Enviador() {
+                @Override
+                public void mandar(String json) {
+                    mandarJson(json);
+                }
+            };
         }
-
-        // La arena no cuenta: es un sandbox con el equipo regalado, y
-        // mezclarla con partidas de verdad arruinaria justo el dato que se
-        // quiere medir.
-        if (com.github.dachhack.sprout.Arena.activa) {
-            return;
-        }
-
-        int piso = Dungeon.depth;
-        if (piso > 0 && piso != pisoVisto) {
-            pisoVisto = piso;
-            mandar("piso", piso, "");
-        }
-
-        boolean vivo = Dungeon.hero.isAlive();
-        if (estabaVivo && !vivo) {
-            String causa = Dungeon.resultDescription;
-            mandar("muerte", piso, causa == null ? "" : causa);
-        }
-        estabaVivo = vivo;
+        Telemetria.revisar();
     }
 
-    /** Al empezar otra partida, volver a contar desde cero. */
     public static void reiniciar() {
-        pisoVisto = 0;
-        estabaVivo = false;
+        Telemetria.reiniciar();
     }
 
-    @JSBody(params = { "evento", "piso", "causa" }, script =
+    @JSBody(params = "json", script =
         // keepalive para que el aviso de muerte salga aunque la pestaña se
         // cierre justo despues, que es lo que suele pasar al morir.
         "try {" +
         "  fetch('/api/progreso', {" +
         "    method: 'POST'," +
         "    headers: { 'Content-Type': 'application/json' }," +
-        "    body: JSON.stringify({ evento: evento, piso: piso, causa: causa })," +
+        "    body: json," +
         "    keepalive: true" +
         "  }).catch(function () {});" +
         "} catch (e) {}")
-    private static native void mandar(String evento, int piso, String causa);
+    private static native void mandarJson(String json);
+
+    /** Que navegador y que sistema, sin nada mas. El user agent entero
+     *  trae de todo; aqui se recorta a lo que sirve para explicar por que
+     *  a alguien le va lento. */
+    @JSBody(script =
+        "var u = navigator.userAgent || '';" +
+        "var nav = /Firefox\\/(\\d+)/.exec(u) ? 'Firefox ' + RegExp.$1" +
+        "        : /Edg\\/(\\d+)/.exec(u)     ? 'Edge ' + RegExp.$1" +
+        "        : /OPR\\/(\\d+)/.exec(u)     ? 'Opera ' + RegExp.$1" +
+        "        : /Chrome\\/(\\d+)/.exec(u)  ? 'Chrome ' + RegExp.$1" +
+        "        : /Version\\/(\\d+).*Safari/.exec(u) ? 'Safari ' + RegExp.$1" +
+        "        : 'otro';" +
+        "var so = /Android (\\d+)/.exec(u)  ? 'Android ' + RegExp.$1" +
+        "       : /iPhone OS (\\d+)/.exec(u) ? 'iOS ' + RegExp.$1" +
+        "       : /Windows NT ([\\d.]+)/.exec(u) ? 'Windows'" +
+        "       : /Mac OS X/.test(u) ? 'macOS'" +
+        "       : /Linux/.test(u) ? 'Linux' : '';" +
+        "return (nav + ' / ' + so).slice(0, 40);")
+    private static native String navegador();
 }
