@@ -467,6 +467,38 @@ public final class Diagnostico {
                     + " yawLogico=" + com.github.dachhack.sprout.FirstPerson.yaw
                     + " yawCamara=" + (cam != null ? cam.yaw : -999f)
                     + " pitchCamara=" + (cam != null ? cam.pitch : -999f));
+            } else if ("matarConBicho".equals(cmd)) {
+                // Muerte por el camino real: Char.damage llama a
+                // Dungeon.fail y ahi es donde se escribe la causa. Matar al
+                // heroe a mano con die(null) se salta eso y la causa sale
+                // vacia -- lo que me hizo creer que faltaba el dato.
+                com.github.dachhack.sprout.actors.mobs.Mob m =
+                    com.github.dachhack.sprout.actors.mobs.Bestiary.mob(Dungeon.depth);
+                int w9 = com.github.dachhack.sprout.levels.Level.getWidth();
+                for (int d = 0; d < 8; d++) {
+                    int v = com.github.dachhack.sprout.FirstPerson
+                        .neighbour(Dungeon.hero.pos, d, w9);
+                    if (v >= 0 && com.github.dachhack.sprout.levels.Level.passable[v]
+                        && com.github.dachhack.sprout.actors.Actor.findChar(v) == null) {
+                        m.pos = v; GameScene.add(m); break;
+                    }
+                }
+                Dungeon.observe();
+                reportar("matarConBicho: " + m.getClass().getSimpleName());
+                // Por attack(), no por damage(): Dungeon.fail -- que es
+                // donde se escribe la causa -- vive dentro de attack, no
+                // dentro de damage. Pegando daño directo la causa se queda
+                // en null y parece que la telemetria no la recoge.
+                Dungeon.hero.HP = 1;
+                for (int i = 0; i < 12 && Dungeon.hero.isAlive(); i++) {
+                    m.attack(Dungeon.hero);
+                }
+                reportar("   vivo=" + Dungeon.hero.isAlive()
+                    + " causa quedo: " + Dungeon.resultDescription);
+            } else if ("morirme".equals(cmd)) {
+                reportar("morirme: piso " + Dungeon.depth
+                    + " hp " + Dungeon.hero.HP);
+                Dungeon.hero.die(null);
             } else if ("curar".equals(cmd)) {
                 // Caerse hace daño de verdad; sin esto el heroe se muere a
                 // la tercera y la prueba de memoria se acaba antes de decir

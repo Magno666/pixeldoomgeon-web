@@ -47,6 +47,7 @@ public final class Entrada {
      */
     public static void bombear(GLSurfaceView vista) {
         avisarSiSeJuega();
+        Progreso.revisar();
         bombearTeclas();
         bombearMirada();
         int n = colaLargo();
