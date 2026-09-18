@@ -102,6 +102,14 @@
     padding: .8rem .9rem; font: inherit; font-size: .95rem; line-height: 1.6;
   }
   .comentar textarea:focus { outline: 2px solid var(--water); outline-offset: 1px; }
+  .lista-espera { margin: 2.6rem 0 1.2rem; }
+  .campo-correo {
+    flex: 1 1 18rem; min-width: 0;
+    background: var(--stone-900); color: var(--stone-100);
+    border: 1px solid var(--stone-700); border-radius: 8px;
+    padding: .7rem .9rem; font: inherit;
+  }
+  .campo-correo:focus { outline: 2px solid var(--water); outline-offset: 1px; }
   .comentar .fila {
     display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
     margin-top: .8rem;
@@ -247,7 +255,8 @@
     <h1>PixelDoomgeon</h1>
     <p class="lede">Estoy metiendo Sprouted Pixel Dungeon en primera persona. Mismo juego, otra cámara. Ya se puede jugar entero en el navegador: dime qué se siente mal.</p>
     <p class="lede-nota">Hecho con ayuda de IA: buena parte del código y de los textos salieron de ahí. Lo digo aquí para no tener que decirlo cada vez.</p>
-    <p class="lede-nota">El juego cuenta, de forma anónima, hasta qué piso llegas y de qué mueres. Nada más que eso: ni IPs, ni partidas, ni nada que diga quién eres. Lo necesito porque varios se quedaron en el piso 2 y no sé si es difícil, aburrido o que algo se rompe.</p>
+    <p class="lede-nota">El juego cuenta, de forma anónima, hasta qué piso llegas, de qué mueres y a cuántos cuadros te corre. Nada más que eso: ni IPs, ni partidas, ni nada que diga quién eres. Lo necesito porque varios se quedaron en el piso 2 y no sé si es difícil, aburrido o que algo se rompe.</p>
+    <p class="lede-nota">Lo único que puede identificarte es el correo de la lista de espera de abajo, y ése lo dejas tú si quieres. No va con lo demás, no se lo paso a nadie, y si me escribes lo borro.</p>
     <div class="acciones">
       <a class="cta" href="juego/">Jugar en el navegador</a>
       <a class="cta cta-2" href="apk/pixeldoomgeon-latest.apk"
@@ -283,6 +292,29 @@
       pasara y qué pasó. Y con qué lo jugaste, porque casi todo lo que se ha
       roto hasta ahora se rompía sólo en teléfono o sólo en compu.
     </p>
+
+    <section class="lista-espera">
+      <h2>Se está haciendo multijugador</h2>
+      <p>Varios héroes en la misma mazmorra, contra los bichos y entre
+        ustedes, en tiempo real. Todavía no está: hay una prueba que ya
+        corre con dos héroes a la vez y falta la parte de red.</p>
+      <p>Si quieres entrar antes que nadie cuando esté, déjame tu correo.
+        <strong>No es una cuenta</strong> — no hay contraseña ni nada que
+        recordar. Es una lista, y cuando abra te mando el acceso.</p>
+
+      <form id="lista" class="comentar">
+        <label class="visualmente-oculto" for="correo">Tu correo</label>
+        <div class="fila">
+          <input id="correo" name="correo" type="email" maxlength="120"
+            autocomplete="email" placeholder="tucorreo@ejemplo.com"
+            class="campo-correo">
+          <button class="cta" type="submit">Apúntame</button>
+        </div>
+        <p id="aviso-lista" class="aviso-com" role="status" hidden></p>
+        <p class="lede-nota">El correo se usa para eso y nada más. No hay
+          boletín, no se lo paso a nadie, y si me escribes lo borro.</p>
+      </form>
+    </section>
 
     <form id="comentar" class="comentar">
       <label class="visualmente-oculto" for="texto">Tu comentario</label>
@@ -419,6 +451,36 @@
 
   // Si la API no responde, la página se queda como está: sin contador y
   // sin encuesta, pero entera. Nunca romper el sitio por esto.
+  // Lista de espera del multijugador.
+  (function () {
+    var f = document.getElementById('lista');
+    if (!f) return;
+    var aviso = document.getElementById('aviso-lista');
+    function decir(t, mal) {
+      aviso.textContent = t;
+      aviso.hidden = false;
+      aviso.style.color = mal ? '#e08a7a' : '';
+    }
+    f.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var correo = document.getElementById('correo').value.trim();
+      if (!correo) { decir('Escribe tu correo primero.', true); return; }
+      decir('Apuntando…');
+      fetch('/api/lista', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ correo: correo, de: 'web' })
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (d.error) { decir(d.error, true); return; }
+        decir(d.ya ? 'Ya estabas en la lista. Van ' + d.cuantos + '.'
+                   : 'Listo. Van ' + d.cuantos + ' y te aviso cuando abra.');
+        f.reset();
+      }).catch(function () {
+        decir('No se pudo. Intenta en un momento.', true);
+      });
+    });
+  })();
+
   fetch('/api/stats').then(function (r) { return r.json(); }).then(pintar).catch(function () {});
 
   botones.forEach(function (b) {
