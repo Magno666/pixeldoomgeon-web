@@ -662,6 +662,48 @@ public final class Diagnostico {
                 celdaPrueba = sal;
                 reportar("alLadoDeLaSalida: salida=" + sal + " heroe=" + puesto
                     + " terreno=" + Dungeon.level.map[sal]);
+            } else if ("verEmisores".equals(cmd)) {
+                reportar("verEmisores: visibles="
+                    + GameScene.emisoresPlanosVisibles() + " de "
+                    + GameScene.emisoresPlanos()
+                    + " capas planas (en primera persona debe ser 0)");
+            } else if ("alLadoDeUnaTuberia".equals(cmd)) {
+                // WALL_DECO es donde cada nivel cuelga su adorno: la
+                // tuberia que gotea en las alcantarillas, la antorcha en
+                // la prision, la veta en las cuevas. Son los que emitian
+                // particulas en coordenadas planas.
+                int wT = com.github.dachhack.sprout.levels.Level.getWidth();
+                int tuberia = -1, puestoT = -1;
+                int[] ladosT = { wT, -wT, 1, -1, wT - 1, wT + 1 };
+                for (int c = 0; c < Dungeon.level.map.length && tuberia < 0; c++) {
+                    if (Dungeon.level.map[c]
+                            != com.github.dachhack.sprout.levels.Terrain.WALL_DECO) {
+                        continue;
+                    }
+                    for (int d : ladosT) {
+                        int v = c + d;
+                        if (v > 0 && v < Dungeon.level.map.length
+                            && com.github.dachhack.sprout.levels.Level.passable[v]
+                            && com.github.dachhack.sprout.actors.Actor.findChar(v) == null) {
+                            tuberia = c; puestoT = v; break;
+                        }
+                    }
+                }
+                if (tuberia < 0) { reportar("alLadoDeUnaTuberia: no hay"); return; }
+                moverHeroe(puestoT);
+                Dungeon.observe();
+                com.github.dachhack.sprout.FirstPerson.faceCell(tuberia);
+                celdaPrueba = tuberia;
+                int cuantas = 0;
+                for (int c = 0; c < Dungeon.level.map.length; c++) {
+                    if (Dungeon.level.map[c]
+                            == com.github.dachhack.sprout.levels.Terrain.WALL_DECO) {
+                        cuantas++;
+                    }
+                }
+                reportar("alLadoDeUnaTuberia: piso=" + Dungeon.depth
+                    + " tuberia=" + tuberia + " heroe=" + puestoT
+                    + " tuberias en el nivel=" + cuantas);
             } else if ("alLadoDeLaEntrada".equals(cmd)) {
                 int ent = Dungeon.level.entrance;
                 int w6 = com.github.dachhack.sprout.levels.Level.getWidth();
