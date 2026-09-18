@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bitácora — PixelDoomgeon</title>
+<!-- El pasillo del icono: rutas absolutas porque estas paginas
+     cuelgan de /juego/ y /arena/, no solo de la raiz. -->
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/icono/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icono/apple-touch-icon.png">
+<meta name="description" content="Lo que encontré al convertir Sprouted Pixel Dungeon a primera persona: el techo que era una lámpara, el agua que era un agujero, y los monstruos que nunca hubo que redibujar.">
+<meta property="og:title" content="Bitácora — PixelDoomgeon">
+<meta property="og:description" content="Diez cosas que salieron mal, y por qué cada una enseñó algo.">
+<meta property="og:image" content="https://pixeldoomgeon.jaliscomundial.com/img/salones.png">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+  :root {
+    --void:      #0B0D0C;
+    --stone-900: #141815;
+    --stone-800: #1C211E;
+    --stone-700: #262C28;
+    --stone-500: #59635C;
+    --stone-300: #9AA69E;
+    --stone-100: #DCE3DD;
+    --gold:      #E0A83A;
+    --water:     #4C8FD6;
+    --brick:     #E07360;
+    --moss:      #8DBE82;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--void);
+    color: var(--stone-100);
+    font-family: "Public Sans", system-ui, -apple-system, sans-serif;
+    font-size: 17px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 46rem; margin: 0 auto; padding: 0 1.25rem; }
+
+  header {
+    padding: 4.5rem 0 2.5rem;
+    border-bottom: 1px solid var(--stone-800);
+  }
+  .kicker {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--gold);
+    display: block; margin-bottom: .9rem;
+  }
+  h1 {
+    font-family: "Bricolage Grotesque", system-ui, sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.1rem, 6.5vw, 3.4rem);
+    line-height: 1.02; letter-spacing: -.025em;
+    margin: 0 0 1rem; text-wrap: balance;
+  }
+  .lede { font-size: 1.1rem; color: var(--stone-300); margin: 0; max-width: 40ch; }
+
+  main { padding: 1rem 0 0; }
+
+  article {
+    padding: 2.6rem 0;
+    border-bottom: 1px solid var(--stone-800);
+  }
+
+  .num {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .72rem; letter-spacing: .12em;
+    color: var(--stone-500);
+    display: block; margin-bottom: .5rem;
+  }
+
+  h2 {
+    font-family: "Bricolage Grotesque", system-ui, sans-serif;
+    font-weight: 600; font-size: 1.45rem; letter-spacing: -.015em;
+    margin: 0 0 .9rem; text-wrap: balance;
+  }
+
+  p { margin: 0 0 1rem; }
+  p:last-child { margin-bottom: 0; }
+  .muted { color: var(--stone-300); }
+  strong { color: #fff; font-weight: 600; }
+
+  pre {
+    background: var(--stone-900);
+    border: 1px solid var(--stone-700);
+    border-left: 3px solid var(--gold);
+    border-radius: 8px;
+    padding: .9rem 1.1rem;
+    overflow-x: auto;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .82rem;
+    line-height: 1.6;
+    color: var(--stone-100);
+    margin: 0 0 1rem;
+  }
+  code {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .86em;
+    background: var(--stone-800);
+    border: 1px solid var(--stone-700);
+    border-radius: 4px; padding: .08em .35em;
+  }
+  pre code { background: none; border: 0; padding: 0; font-size: 1em; }
+
+  a { color: var(--water); text-decoration: none; border-bottom: 1px solid rgba(76,143,214,.35); }
+  a:hover { border-bottom-color: var(--water); }
+  a:focus-visible { outline: 2px solid var(--water); outline-offset: 3px; }
+
+  .volver {
+    display: inline-block;
+    margin: 2.5rem 0 0;
+    font-size: .9rem;
+  }
+
+  footer {
+    padding: 2.5rem 0 4rem;
+    color: var(--stone-500);
+    font-size: .88rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <span class="kicker">PixelDoomgeon · notas</span>
+    <h1>Todo lo que rompí</h1>
+    <p class="lede">Notas sueltas de lo que fui encontrando. Casi todo es culpa mía.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <article>
+    <span class="num">01 · el motor</span>
+    <h2>Buscando un motor que no estaba</h2>
+    <p>Di por hecho que usaba libGDX, como Shattered moderno. Sprouted forkeó una versión mucho más vieja.</p>
+    <pre><code>grep -r "com.badlogic.gdx" src/   # cero resultados
+grep -r "com.watabou.noosa" src/  # todo el juego</code></pre>
+    <p class="muted">Es Noosa, el motor de Watabou, sobre OpenGL ES pelado. Y el shader ya venía preparado para 3D sin que nadie lo usara. Faltaba una cámara en perspectiva y poco más. Me esperaba semanas de trabajo ahí.</p>
+  </article>
+
+  <article>
+    <span class="num">02 · la interfaz</span>
+    <h2>Por qué esto se pudo hacer</h2>
+    <p>El juego dibuja el mundo con una cámara y la interfaz con <strong>otra</strong>. Inventario, botones, ventanas: todo eso va aparte.</p>
+    <p class="muted">O sea que podía cambiar el mundo entero sin tocar la interfaz. Si llego a cambiar de motor, me toca reescribirla completa. Puro golpe de suerte.</p>
+  </article>
+
+  <article>
+    <span class="num">03 · el techo</span>
+    <h2>El techo quedó como una lámpara de oficina</h2>
+    <p>El suelo de Pixel Dungeon es oscuro: visto desde arriba, funciona. De frente, se lee como un agujero negro. Así que subí el brillo del suelo multiplicando por 1.85.</p>
+    <p class="muted">Lo que no pensé: el techo usa la textura de pared, que es mucho más clara, y estaba en la misma malla. 0.65 por 1.85 son 1.20, y más de 1.0 no existe. Blanco plano.</p>
+  </article>
+
+  <article>
+    <span class="num">04 · el agua</span>
+    <h2>Los charcos eran agujeros</h2>
+    <p>Semanas diciendo que el piso negro era cosa del contraste del pixel art. Pues no.</p>
+    <p class="muted">El tile del agua en el atlas está <strong>completamente transparente</strong>. En el juego plano eso es correcto: es un hueco a propósito, para que se vea por debajo la capa de agua animada. En primera persona escondí esa capa, así que cada charco quedó como un vacío. Unas cien celdas por piso.</p>
+    <p>Lo arreglé, y el agujero seguía ahí. Resulta que hay quince tiles más para las orillas. Al final la respuesta era preguntarle al juego en vez de escribir mi lista a mano:</p>
+    <pre><code>Terrain.flags[t] &amp; Terrain.LIQUID</code></pre>
+  </article>
+
+  <article>
+    <span class="num">05 · los monstruos</span>
+    <h2>Casi redibujo 97 monstruos de a gratis</h2>
+    <p>Tenía escrito en mis notas que los sprites eran vista de arriba y no servían, y que había que rehacerlos todos.</p>
+    <p class="muted">Hasta que miré la rata de cerca. Está sentada, de tres cuartos, con los ojos viendo al frente y la cola apoyada abajo. Watabou las dibujó de pie desde el principio, aunque el mapa se vea desde arriba.</p>
+    <p>Lo cenital era el suelo y las paredes, y eso ya lo había reemplazado la geometría. <strong>Las criaturas nunca fueron arte cenital.</strong></p>
+  </article>
+
+  <article>
+    <span class="num">06 · el pasto</span>
+    <h2>El pasto dejó de esconderte</h2>
+    <p>Alguien en r/PixelDungeon lo cachó desde una captura: el pasto alto debería tapar la vista.</p>
+    <pre><code>HIGH_GRASS   PASSABLE | LOS_BLOCKING | FLAMABLE</code></pre>
+    <p class="muted">Mi código decide qué es pared preguntando si algo es sólido. El pasto es <strong>opaco pero se puede caminar</strong>, y esa categoría ni se me había ocurrido. Lo pintaba plano en el suelo.</p>
+  </article>
+
+  <article>
+    <span class="num">07 · las diagonales</span>
+    <h2>Borré las diagonales</h2>
+    <p>Mi stick tenía cuatro direcciones. El juego se mueve en ocho, y moverse en diagonal sirve para escapar y para rodear.</p>
+    <p class="muted">Lo quité sin enterarme, escribiendo un control que se veía normal. Ese dolió.</p>
+  </article>
+
+  <article>
+    <span class="num">08 · la prueba</span>
+    <h2>Mis pruebas revisaban basura</h2>
+    <p>Tengo pruebas que generan un nivel de verdad y revisan la geometría. Todas pasaban. Muy contento yo.</p>
+    <p class="muted">Faltaba inicializar una tabla de objetos. Sin ella, el primero que pedía un objeto al azar tronaba, el nivel <strong>se quedaba a medio construir</strong>, y lo que no se pintaba quedaba en cero — que es el valor del abismo, o sea negro. Estaba revisando medio nivel y medio vacío.</p>
+    <p>Lo escondía una sola línea:</p>
+    <pre><code>try { level.create(); } catch (Throwable ignored) {}</code></pre>
+  </article>
+
+  <article>
+    <span class="num">09 · la precisión</span>
+    <h2>Una bomba de tiempo en la luz</h2>
+    <p>La antorcha mide la distancia real a cada punto. El shader pedía precisión media, que en muchos móviles son 16 bits y se topan en 65504.</p>
+    <pre><code>48 casillas = 144 unidades → 62208   cabe, al filo
+64 casillas = 192 unidades → 110592  desborda
+80 casillas = 240 unidades → 172800  desborda</code></pre>
+    <p class="muted">Los niveles son de 48. O sea que pasa por un 5%. Si alguien agranda un nivel, la luz se va a llenar de basura en unos teléfonos sí y en otros no, y va a parecer culpa de la GPU.</p>
+  </article>
+
+  <article>
+    <span class="num">10 · el fantasma</span>
+    <h2>Tres días peleando con un bug que no existía</h2>
+    <p>La demo salía con «aquí no hay WebGL». Le eché la culpa a la caché. Luego al navegador. Luego a la carga del nivel. Las tres veces mal.</p>
+    <pre><code>#error  { display: grid; }      /* mío: gana */
+[hidden] { display: none; }     /* del navegador: pierde */</code></pre>
+    <p class="muted">Esconder el panel de error <strong>nunca funcionó</strong>. Un rectángulo negro a pantalla completa, encima de un canvas que dibujaba perfecto.</p>
+    <p>Y lo mejor: cuando fui a comprobarlo, leí el contenido del canvas y salió bien. Claro que salió bien, estaba abajo del panel. Estuve revisando justo la parte que sí servía.</p>
+  </article>
+
+  <p><a class="volver" href="./">← volver a PixelDoomgeon</a></p>
+</main>
+
+<footer class="wrap">
+  <p>Sprouted Pixel Dungeon es de dachhack; Shattered, de Evan Debenham; Pixel Dungeon y el motor Noosa, de Watabou. PixelDoomgeon es un proyecto de fan bajo GPL-3.0-or-later.</p>
+</footer>
+
+</body>
+</html>

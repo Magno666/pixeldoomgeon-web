@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PixelDoomgeon — Pixel Dungeon en primera persona</title>
+<!-- El pasillo del icono: rutas absolutas porque estas paginas
+     cuelgan de /juego/ y /arena/, no solo de la raiz. -->
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/icono/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icono/apple-touch-icon.png">
+<meta name="description" content="Sprouted Pixel Dungeon en primera persona para Android. Avances del desarrollo y demos jugables en el navegador.">
+
+<meta property="og:title" content="PixelDoomgeon">
+<meta property="og:description" content="Sprouted Pixel Dungeon en primera persona. Avances del desarrollo y demos jugables.">
+<meta property="og:image" content="https://pixeldoomgeon.jaliscomundial.com/img/salones.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+  :root {
+    --void:      #0B0D0C;
+    --stone-900: #141815;
+    --stone-800: #1C211E;
+    --stone-700: #262C28;
+    --stone-500: #59635C;
+    --stone-300: #9AA69E;
+    --stone-100: #DCE3DD;
+    --gold:      #E0A83A;
+    --water:     #4C8FD6;
+    --moss:      #8DBE82;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--void);
+    color: var(--stone-100);
+    font-family: "Public Sans", system-ui, -apple-system, sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  img { max-width: 100%; display: block; }
+  .wrap { max-width: 54rem; margin: 0 auto; padding: 0 1.25rem; }
+
+  header.hero { position: relative; border-bottom: 1px solid var(--stone-700); overflow: hidden; }
+  .hero-img {
+    position: absolute; inset: 0;
+    background: url("img/alcantarillas.png") center 40%/cover no-repeat;
+    opacity: .22;
+  }
+  .hero-fade {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(11,13,12,.6) 0%, rgba(11,13,12,.88) 60%, var(--void) 100%);
+  }
+  .hero-inner { position: relative; padding: 3.5rem 0 2.6rem; display: flex; flex-direction: column; gap: .9rem; }
+
+  .kicker {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .7rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  h1 {
+    font-family: "Bricolage Grotesque", system-ui, sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.3rem, 8vw, 3.8rem);
+    line-height: .98; letter-spacing: -.03em;
+    margin: 0;
+  }
+
+  .lede { font-size: 1.08rem; color: var(--stone-300); max-width: 44ch; margin: 0; }
+
+  .acciones { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: .7rem; }
+  .cta {
+    display: inline-block; background: var(--gold); color: #16130B;
+    font-weight: 600; font-size: .97rem;
+    padding: .75rem 1.35rem; border-radius: 999px;
+    text-decoration: none; border: 0;
+  }
+  .cta:hover { filter: brightness(1.08); }
+  .cta-2 { background: transparent; color: var(--stone-100); border: 1px solid var(--stone-700); }
+  .cta-2:hover { background: var(--stone-800); filter: none; }
+  .visualmente-oculto {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+  }
+
+  .comentar { max-width: 46rem; margin-bottom: 2.4rem; }
+  .comentar textarea {
+    width: 100%; resize: vertical; min-height: 6rem;
+    background: #101310; color: var(--stone-100);
+    border: 1px solid var(--stone-700); border-radius: .5rem;
+    padding: .8rem .9rem; font: inherit; font-size: .95rem; line-height: 1.6;
+  }
+  .comentar textarea:focus { outline: 2px solid var(--water); outline-offset: 1px; }
+  .comentar .fila {
+    display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+    margin-top: .8rem;
+  }
+  .donde { display: flex; gap: .4rem; }
+  .donde label { display: inline-flex; align-items: center; gap: .4rem;
+    padding: .45rem .8rem; border: 1px solid var(--stone-700);
+    border-radius: 99px; cursor: pointer; font-size: .88rem; }
+  .donde input { accent-color: var(--gold); }
+  .aviso-com { margin: .8rem 0 0; font-size: .88rem; }
+
+  .comentarios { display: grid; gap: .8rem; max-width: 46rem; }
+  .comentarios article {
+    background: #101310; border: 1px solid var(--stone-700);
+    border-radius: .5rem; padding: .85rem 1rem;
+  }
+  .comentarios .meta {
+    display: block; color: var(--stone-400, #8a938c); font-size: .78rem;
+    margin-bottom: .35rem; text-transform: uppercase; letter-spacing: .06em;
+  }
+  .comentarios p { margin: 0; line-height: 1.65; white-space: pre-wrap; }
+
+  .lede-nota {
+    color: var(--stone-400, #8a938c); font-size: .88rem; line-height: 1.6;
+    max-width: 52ch; margin: -.4rem 0 1.4rem;
+  }
+
+  .pedido { max-width: 58ch; line-height: 1.7; margin: 0 0 1.6rem; }
+
+  .cta:focus-visible { outline: 2px solid var(--water); outline-offset: 3px; }
+
+  section { padding: 3rem 0; border-bottom: 1px solid var(--stone-800); }
+
+  h2 {
+    font-family: "Bricolage Grotesque", system-ui, sans-serif;
+    font-weight: 600; font-size: 1.5rem; letter-spacing: -.018em;
+    margin: 0 0 .4rem;
+  }
+  .sub { color: var(--stone-500); font-size: .92rem; margin: 0 0 1.8rem; }
+
+  ol.avances { list-style: none; padding: 0; margin: 0; }
+  ol.avances > li {
+    display: grid; gap: .15rem .2rem;
+    grid-template-columns: 5.5rem 1fr;
+    padding: 1.15rem 0; border-top: 1px solid var(--stone-800);
+  }
+  ol.avances > li:first-child { border-top: 0; }
+
+  .fecha {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .74rem; color: var(--stone-500); padding-top: .3rem;
+  }
+  .titulo { font-weight: 600; }
+  .detalle { grid-column: 2; color: var(--stone-300); font-size: .93rem; line-height: 1.55; }
+  .nuevo {
+    display: inline-block; vertical-align: middle;
+    font-family: "JetBrains Mono", monospace;
+    font-size: .6rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--void); background: var(--moss);
+    padding: .1rem .4rem; border-radius: 3px; margin-left: .5rem;
+  }
+
+  @media (max-width: 34rem) {
+    ol.avances > li { grid-template-columns: 1fr; }
+    .detalle { grid-column: 1; }
+    .fecha { padding-top: 0; }
+  }
+
+  ol.pasos { list-style: none; padding: 0; margin: 0; display: grid; gap: .7rem; }
+  @media (min-width: 46rem) { ol.pasos { grid-template-columns: repeat(3, 1fr); } }
+  ol.pasos a {
+    display: flex; flex-direction: column; gap: .3rem; height: 100%;
+    padding: 1rem 1.1rem;
+    background: var(--stone-900); border: 1px solid var(--stone-700);
+    border-radius: 10px; text-decoration: none; color: inherit;
+  }
+  ol.pasos a:hover { border-color: var(--gold); background: var(--stone-800); }
+  .paso-n {
+    font-family: "JetBrains Mono", monospace;
+    font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold);
+  }
+  .paso-t { font-weight: 600; }
+  .paso-d { font-size: .88rem; color: var(--stone-300); line-height: 1.5; }
+
+  .shots { display: grid; gap: .7rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); }
+  .shots img { border: 1px solid var(--stone-700); border-radius: 6px; }
+
+  p { margin: 0 0 1rem; max-width: 60ch; }
+  p:last-child { margin-bottom: 0; }
+  .muted { color: var(--stone-300); }
+  strong { color: #fff; font-weight: 600; }
+
+  a { color: var(--water); text-decoration: none; border-bottom: 1px solid rgba(76,143,214,.3); }
+  a:hover { border-bottom-color: var(--water); }
+
+  /* ---- encuesta ---- */
+
+  .pregunta { font-weight: 600; margin: 0 0 .9rem; }
+  .opciones { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .opciones button {
+    appearance: none; font: inherit; font-size: .92rem;
+    color: var(--stone-100);
+    background: var(--stone-900);
+    border: 1px solid var(--stone-700);
+    border-radius: 999px;
+    padding: .6rem 1.15rem;
+    cursor: pointer;
+  }
+  .opciones button:hover { border-color: var(--gold); background: var(--stone-800); }
+  .opciones button:focus-visible { outline: 2px solid var(--water); outline-offset: 2px; }
+  .opciones button[aria-pressed="true"] { background: var(--gold); color: #16130B; border-color: var(--gold); }
+  .opciones button[disabled] { cursor: default; opacity: .75; }
+  .opciones button[disabled]:hover { border-color: var(--stone-700); background: var(--stone-900); }
+  .opciones button[disabled][aria-pressed="true"]:hover { background: var(--gold); border-color: var(--gold); }
+
+  #resultado { margin-top: 1.2rem; display: grid; gap: .5rem; max-width: 30rem; }
+  .barra { display: grid; grid-template-columns: 1fr auto; gap: .2rem .8rem; font-size: .88rem; }
+  .barra b { font-weight: 500; color: var(--stone-300); }
+  .barra span { color: var(--stone-500); font-family: "JetBrains Mono", monospace; font-size: .8rem; }
+  .barra i {
+    grid-column: 1 / -1; height: 5px; border-radius: 99px;
+    background: var(--stone-700); display: block; position: relative;
+  }
+  .barra i::after {
+    content: ""; position: absolute; inset: 0 auto 0 0;
+    width: var(--w, 0%); background: var(--gold); border-radius: 99px;
+  }
+
+  #gracias { color: var(--moss); font-size: .9rem; margin: 1rem 0 0; }
+  #contador { font-family: "JetBrains Mono", monospace; font-size: .8rem; color: var(--stone-700); }
+
+  footer { padding: 2.5rem 0 4rem; color: var(--stone-500); font-size: .88rem; }
+  footer a { color: var(--stone-300); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-img" role="presentation"></div>
+  <div class="hero-fade" role="presentation"></div>
+  <div class="wrap hero-inner">
+    <span class="kicker">En desarrollo · Android</span>
+    <h1>PixelDoomgeon</h1>
+    <p class="lede">Estoy metiendo Sprouted Pixel Dungeon en primera persona. Mismo juego, otra cámara. Ya se puede jugar entero en el navegador: dime qué se siente mal.</p>
+    <p class="lede-nota">Hecho con ayuda de IA: buena parte del código y de los textos salieron de ahí. Lo digo aquí para no tener que decirlo cada vez.</p>
+    <p class="lede-nota">El juego cuenta, de forma anónima, hasta qué piso llegas y de qué mueres. Nada más que eso: ni IPs, ni partidas, ni nada que diga quién eres. Lo necesito porque varios se quedaron en el piso 2 y no sé si es difícil, aburrido o que algo se rompe.</p>
+    <div class="acciones">
+      <a class="cta" href="juego/">Jugar en el navegador</a>
+      <a class="cta cta-2" href="arena/">Pelear con los jefes</a>
+      <a class="cta cta-2" href="demo/">Probar la demo 3D</a>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>Dime qué se siente mal</h2>
+    <p class="sub">Es un prototipo. No necesito felicitaciones: necesito saber qué te estorbó.</p>
+
+    <p class="pedido">
+      Juégalo cinco minutos y déjamelo aquí abajo. Lo que más sirve es lo
+      concreto: en qué piso ibas, qué intentaste hacer, qué esperabas que
+      pasara y qué pasó. Y con qué lo jugaste, porque casi todo lo que se ha
+      roto hasta ahora se rompía sólo en teléfono o sólo en compu.
+    </p>
+
+    <form id="comentar" class="comentar">
+      <label class="visualmente-oculto" for="texto">Tu comentario</label>
+      <textarea id="texto" name="texto" rows="4" maxlength="1000"
+        placeholder="Iba en el piso 2, quise bajar por la escalera y…"></textarea>
+
+      <div class="fila">
+        <div class="donde" role="radiogroup" aria-label="Con qué lo jugaste">
+          <label><input type="radio" name="donde" value="telefono" checked><span>Teléfono</span></label>
+          <label><input type="radio" name="donde" value="compu"><span>Compu</span></label>
+        </div>
+        <button class="cta" type="submit">Enviar</button>
+      </div>
+      <p id="aviso-comentario" class="aviso-com" role="status" hidden></p>
+    </form>
+
+    <div id="lista-comentarios" class="comentarios" aria-live="polite"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>¿Le entras?</h2>
+    <p class="sub">Una respuesta por persona. Nada más quiero saber si hay ganas.</p>
+
+    <div id="encuesta">
+      <p class="pregunta">¿Probarías el APK en tu celular?</p>
+      <div class="opciones">
+        <button type="button" data-opcion="probar">Sí, mándamelo</button>
+        <button type="button" data-opcion="esperar">Cuando esté más completo</button>
+        <button type="button" data-opcion="mirar">Nomás vengo a mirar</button>
+      </div>
+      <div id="resultado" hidden></div>
+      <p id="gracias" hidden>Va anotado. Gracias.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Pruébalo</h2>
+    <p class="sub">Dejé las tres arriba para que se vea el cambio.</p>
+    <ol class="pasos">
+      <li><a href="demo/v1/">
+        <span class="paso-n">v1</span>
+        <span class="paso-t">La que no dejaba ver</span>
+        <span class="paso-d">Calibré la antorcha en el celular de noche. En monitor no se ve nada.</span>
+      </a></li>
+      <li><a href="demo/v2/">
+        <span class="paso-n">v2</span>
+        <span class="paso-t">Antorcha afinada</span>
+        <span class="paso-d">Misma mazmorra, la luz llega más lejos. Ya se ve la sala.</span>
+      </a></li>
+      <li><a href="demo/">
+        <span class="paso-n">v3</span>
+        <span class="paso-t">Con el mapa</span>
+        <span class="paso-d">El minimapa de la esquina, con la flecha de orientación.</span>
+      </a></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Cómo se ve</h2>
+    <p class="sub">Ojo: son renders del motor, no capturas del celular. Mismas texturas y misma geometría, pero sin interfaz ni monstruos.</p>
+    <div class="shots">
+      <img src="img/salones.png" alt="Los Salones, con vitrales de colores en las paredes" loading="lazy">
+      <img src="img/cuevas.png" alt="Cuevas con vetas de oro en la roca" loading="lazy">
+      <img src="img/alcantarillas.png" alt="Alcantarillas con agua y desagües" loading="lazy">
+      <img src="img/ciudad.png" alt="Pasillo de la Ciudad Enana" loading="lazy">
+      <img src="img/prision.png" alt="Sala de la Prisión" loading="lazy">
+      <img src="img/puerta.png" alt="Cruce con una puerta de madera al fondo" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Antes de que preguntes</h2>
+    <p><strong>La lógica del juego no la toqué.</strong> Niveles, jefes, objetos, pociones, maldiciones: todo es Sprouted tal cual. Lo único que cambié es cómo se dibuja.</p>
+    <p class="muted">Corre sobre Noosa, el motor de Watabou, sin librerías de 3D. Y falta harto: nadie ha pasado del piso 2 y a los jefes todavía no los he visto de frente.</p>
+  </div>
+</section>
+
+<footer class="wrap">
+  <p>Gracias a <a href="https://watabou.itch.io/">Watabou</a> (Pixel Dungeon y el motor Noosa), <a href="https://shatteredpixel.com/">Evan Debenham</a> (Shattered) y <a href="https://github.com/dachhack/SproutedPixelDungeon">dachhack</a> (Sprouted, el fork directo de donde sale esto).</p>
+  <p>Proyecto de fan, sin relación oficial con ninguno de ellos. GPL-3.0-or-later.</p>
+  <p id="contador"></p>
+</footer>
+
+<script>
+(function () {
+  var encuesta = document.getElementById('encuesta');
+  var resultado = document.getElementById('resultado');
+  var gracias = document.getElementById('gracias');
+  var contador = document.getElementById('contador');
+  var botones = encuesta.querySelectorAll('[data-opcion]');
+  var NOMBRES = {
+    probar:  'Sí, mándamelo',
+    esperar: 'Cuando esté más completo',
+    mirar:   'Nomás vengo a mirar'
+  };
+
+  function pintar(d) {
+    if (typeof d.unicos === 'number') {
+      contador.textContent = d.unicos + (d.unicos === 1 ? ' visitante' : ' visitantes')
+        + ' · ' + d.visitas + ' visitas';
+    }
+    if (!d.mi_voto) return;
+
+    // Ya votó: se bloquean los botones y se enseña cómo va.
+    botones.forEach(function (b) {
+      b.disabled = true;
+      b.setAttribute('aria-pressed', b.dataset.opcion === d.mi_voto ? 'true' : 'false');
+    });
+    gracias.hidden = false;
+
+    var total = d.total_votos || 1;
+    resultado.innerHTML = '';
+    Object.keys(NOMBRES).forEach(function (k) {
+      var n = (d.conteo && d.conteo[k]) || 0;
+      var pct = Math.round(n * 100 / total);
+      var fila = document.createElement('div');
+      fila.className = 'barra';
+      fila.innerHTML = '<b></b><span></span><i></i>';
+      fila.querySelector('b').textContent = NOMBRES[k];
+      fila.querySelector('span').textContent = pct + '% · ' + n;
+      fila.querySelector('i').style.setProperty('--w', pct + '%');
+      resultado.appendChild(fila);
+    });
+    resultado.hidden = false;
+  }
+
+  // Si la API no responde, la página se queda como está: sin contador y
+  // sin encuesta, pero entera. Nunca romper el sitio por esto.
+  fetch('/api/stats').then(function (r) { return r.json(); }).then(pintar).catch(function () {});
+
+  botones.forEach(function (b) {
+    b.addEventListener('click', function () {
+      botones.forEach(function (o) { o.disabled = true; });
+      fetch('/api/voto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opcion: b.dataset.opcion })
+      })
+        .then(function (r) { return r.json(); })
+        .then(pintar)
+        .catch(function () {
+          botones.forEach(function (o) { o.disabled = false; });
+        });
+    });
+  });
+})();
+
+  // --- comentarios ---
+  // Se pinta con textContent a proposito: lo que escribe la gente NUNCA
+  // pasa por innerHTML, asi que un <script> en un comentario se ve como
+  // texto y no se ejecuta.
+  (function () {
+    var forma  = document.getElementById('comentar');
+    var caja   = document.getElementById('texto');
+    var aviso  = document.getElementById('aviso-comentario');
+    var lista  = document.getElementById('lista-comentarios');
+    if (!forma) return;
+
+    function hace(seg) {
+      var d = Math.max(0, Math.floor(Date.now() / 1000) - seg);
+      if (d < 60)    return 'hace un momento';
+      if (d < 3600)  return 'hace ' + Math.floor(d / 60) + ' min';
+      if (d < 86400) return 'hace ' + Math.floor(d / 3600) + ' h';
+      return 'hace ' + Math.floor(d / 86400) + ' d';
+    }
+
+    function pintar(cs) {
+      lista.textContent = '';
+      if (!cs || !cs.length) {
+        var vacio = document.createElement('p');
+        vacio.className = 'sub';
+        vacio.textContent = 'Todavía no hay ninguno. Estrénalo tú.';
+        lista.appendChild(vacio);
+        return;
+      }
+      cs.forEach(function (c) {
+        var art = document.createElement('article');
+        var meta = document.createElement('span');
+        meta.className = 'meta';
+        meta.textContent = (c.donde === 'compu' ? 'Compu' :
+                            c.donde === 'telefono' ? 'Teléfono' : 'Sin decir')
+                           + ' · ' + hace(c.cuando);
+        var txt = document.createElement('p');
+        txt.textContent = c.texto;
+        art.appendChild(meta);
+        art.appendChild(txt);
+        lista.appendChild(art);
+      });
+    }
+
+    function decir(msg, malo) {
+      aviso.textContent = msg;
+      aviso.style.color = malo ? '#d98b7a' : '#8fbf7a';
+      aviso.hidden = false;
+    }
+
+    fetch('/api/comentarios')
+      .then(function (r) { return r.json(); })
+      .then(function (d) { pintar(d.comentarios); })
+      .catch(function () {});
+
+    forma.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var texto = caja.value.trim();
+      if (texto.length < 3) { decir('Escribe un poco más.', true); return; }
+
+      var donde = (forma.querySelector('input[name="donde"]:checked') || {}).value;
+      var boton = forma.querySelector('button');
+      boton.disabled = true;
+
+      fetch('/api/comentario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto: texto, donde: donde })
+      })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (res) {
+          boton.disabled = false;
+          if (!res.ok) { decir(res.d.error || 'No se pudo enviar.', true); return; }
+          caja.value = '';
+          decir('Anotado. Gracias.', false);
+          pintar(res.d.comentarios);
+        })
+        .catch(function () {
+          boton.disabled = false;
+          decir('No se pudo enviar. Intenta otra vez.', true);
+        });
+    });
+  })();
+
+</script>
+
+</body>
+</html>

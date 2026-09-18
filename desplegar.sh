@@ -20,16 +20,41 @@ BUILD=$(grep -oE 'FP build v[0-9]+' \
   | head -1 | tr -d ' ' | tr '[:upper:]' '[:lower:]')
 SELLO="${BUILD:-build}-$(date +%Y%m%d%H%M)"
 
+# El sello que ya estaba servido. Hay que leerlo AHORA: la copia de
+# index.html de mas abajo lo borra, y el del repo no lleva ninguno.
+# Re-sellar cuando el JS no cambio le cuesta 6 MB de descarga a cada
+# persona que este jugando en ese momento, y no arregla nada.
+VIEJO=$(grep -o 'juego\.js?v=[^"]*' "$DESTINO/index.html" 2>/dev/null \
+  | head -1 | sed 's/.*?v=//' || true)
+
 # La pagina sale del repo, no de lo que hubiera en el servidor: si vive
 # solo en /var/www no hay forma de saber que cambio ni de volver atras.
 cp "$RAIZ/sitio/index.html" "$DESTINO/index.html"
+
+# La portada y la bitacora vivian SOLO en el servidor -- el comentario de
+# arriba decia una cosa y el script hacia otra. Ahora salen del repo como
+# el resto.
+RAIZ_SITIO="$DESTINO/.."
+cp "$RAIZ/sitio/portada.html"  "$RAIZ_SITIO/index.html"
+cp "$RAIZ/sitio/bitacora.html" "$RAIZ_SITIO/bitacora.html"
+
+# El icono. favicon.ico va en la raiz porque el navegador lo pide ahi sin
+# preguntar, aunque la pagina enlace otro -- eran los unicos 404 del log.
+mkdir -p "$RAIZ_SITIO/icono"
+cp "$RAIZ/sitio/icono/favicon.ico" "$RAIZ_SITIO/favicon.ico"
+cp "$RAIZ/sitio/icono/"*.png "$RAIZ_SITIO/icono/"
 
 # La arena vive un nivel arriba, junto a /juego/, y usa el mismo juego.js
 # -- por eso no lleva copia propia: el navegador ya lo tiene en cache de
 # haber jugado, y son seis megas que no vale la pena duplicar.
 mkdir -p "$DESTINO/../arena"
 cp "$RAIZ/sitio/arena/index.html" "$DESTINO/../arena/index.html"
-cp "$JS" "$DESTINO/juego.js"
+if [ -f "$DESTINO/juego.js" ] && cmp -s "$JS" "$DESTINO/juego.js" && [ -n "$VIEJO" ]; then
+  SELLO="$VIEJO"
+  echo "juego.js sin cambios -- se conserva el sello $SELLO"
+else
+  cp "$JS" "$DESTINO/juego.js"
+fi
 sed -i -E "s|<script src=\"juego\.js(\?v=[^\"]*)?\"|<script src=\"juego.js?v=$SELLO\"|" \
   "$DESTINO/index.html"
 
