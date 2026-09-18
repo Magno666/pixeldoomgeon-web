@@ -451,6 +451,22 @@ public final class Diagnostico {
                 }
                 reportar(sb.toString());
                 alturas = null;
+            } else if ("marear".equals(cmd)) {
+                com.github.dachhack.sprout.actors.buffs.Buff.affect(
+                    Dungeon.hero,
+                    com.github.dachhack.sprout.actors.buffs.Vertigo.class, 30f);
+                reportar("marear: vertigo puesto, "
+                    + (Dungeon.hero.buff(
+                        com.github.dachhack.sprout.actors.buffs.Vertigo.class) != null));
+            } else if ("verMareo".equals(cmd)) {
+                com.watabou.noosa.Camera3D cam =
+                    com.github.dachhack.sprout.FirstPerson.camera();
+                reportar("verMareo: vertigo="
+                    + (Dungeon.hero.buff(
+                        com.github.dachhack.sprout.actors.buffs.Vertigo.class) != null)
+                    + " yawLogico=" + com.github.dachhack.sprout.FirstPerson.yaw
+                    + " yawCamara=" + (cam != null ? cam.yaw : -999f)
+                    + " pitchCamara=" + (cam != null ? cam.pitch : -999f));
             } else if ("curar".equals(cmd)) {
                 // Caerse hace daño de verdad; sin esto el heroe se muere a
                 // la tercera y la prueba de memoria se acaba antes de decir
