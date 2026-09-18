@@ -55,6 +55,14 @@ if [ -f "$DESTINO/juego.js" ] && cmp -s "$JS" "$DESTINO/juego.js" && [ -n "$VIEJ
 else
   cp "$JS" "$DESTINO/juego.js"
 fi
+
+# gzip_static: nginx sirve este .gz tal cual en vez de comprimir los 6.25 MB
+# del bundle en cada carga. -9 en vez del -6 que hace nginx al vuelo, que
+# aqui se paga una sola vez. Se regenera siempre, tambien cuando el sello
+# se conserva, por si el .gz quedo de un despliegue a medias.
+gzip -9 -c "$DESTINO/juego.js" > "$DESTINO/juego.js.gz.tmp"
+mv "$DESTINO/juego.js.gz.tmp" "$DESTINO/juego.js.gz"
+echo "juego.js.gz: $(du -h "$DESTINO/juego.js.gz" | cut -f1)"
 sed -i -E "s|<script src=\"juego\.js(\?v=[^\"]*)?\"|<script src=\"juego.js?v=$SELLO\"|" \
   "$DESTINO/index.html"
 
