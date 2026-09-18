@@ -40,5 +40,13 @@ teavm.js {
     mainClass = 'web.Main'
     targetFileName = 'juego.js'
     obfuscated = false
-    sourceMap = true
+    // sourceMap apagado a proposito. El mapa que genera TeaVM apunta a
+    // file:///root/proyectos/... -- rutas de este disco, que nadie mas
+    // tiene: no le sirve a ningun visitante, le filtra la estructura de
+    // carpetas, y el comentario //# sourceMappingURL hace que el navegador
+    // lo pida y se lleve un 404 cada vez que alguien abre las herramientas
+    // de desarrollo. Para depurar sirve obfuscated=false, que se queda:
+    // TeaVM no guarda pilas de excepciones, asi que el mapa nunca fue la
+    // herramienta -- lo es parchear el juego.js generado.
+    sourceMap = false
 }

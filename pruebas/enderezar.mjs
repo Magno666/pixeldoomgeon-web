@@ -18,7 +18,7 @@ for (const caso of ['enderezarToque','enderezarMando','enderezarApagado']) {
   // pared y el siguiente caso se queda sin hueco.
   await orden('reubicarAbierto', 1800);
   await orden(caso, 3000);
-  await orden('verYaw', 1200);
+  await orden('verYaw', 2500);
   const a = diag.filter(t=>t.startsWith(caso)).pop() || '(no se pudo)';
   const y = diag.filter(t=>t.startsWith('verYaw')).pop() || '';
   console.log(caso, '\n  ', a, '\n  ->', y);
