@@ -674,6 +674,135 @@ public final class Diagnostico {
                     + com.github.dachhack.sprout.Adornos.visibles()
                     + " de " + com.github.dachhack.sprout.Adornos.cuantos()
                     + " | " + com.github.dachhack.sprout.Adornos.comoEsta(celdaPrueba));
+            } else if ("tocarArbusto".equals(cmd)) {
+                // Planta al heroe mirando a una mata de hierba alta y toca
+                // el centro de la pantalla. Antes el rayo la atravesaba y
+                // devolvia una casilla de mas atras, asi que el heroe se
+                // iba por el pasillo a darle la vuelta.
+                int wA = com.github.dachhack.sprout.levels.Level.getWidth();
+                int mata = -1, puestoA = -1, dirA = 0, lejos = 0;
+                int[] ladosA = { wA, -wA, 1, -1 };
+                for (int c = 0; c < Dungeon.level.map.length && lejos < 4; c++) {
+                    if (Dungeon.level.map[c]
+                            != com.github.dachhack.sprout.levels.Terrain.HIGH_GRASS) {
+                        continue;
+                    }
+                    for (int d : ladosA) {
+                        // Hay que poder ver la mata Y que haya suelo detras,
+                        // que es lo unico que el rayo podria confundir.
+                        int detras = c - d;
+                        if (detras < 0 || detras >= Dungeon.level.map.length
+                            || !com.github.dachhack.sprout.levels.Level.passable[detras]) {
+                            continue;
+                        }
+                        int v = c + d, pasos = 0;
+                        while (pasos < 4) {
+                            if (v < 0 || v >= Dungeon.level.map.length
+                                || !com.github.dachhack.sprout.levels.Level.passable[v]
+                                || com.github.dachhack.sprout.actors.Actor.findChar(v) != null) {
+                                break;
+                            }
+                            pasos++;
+                            int sig = v + d;
+                            if (pasos >= 3) { break; }
+                            v = sig;
+                        }
+                        if (pasos >= 2 && pasos > lejos) {
+                            mata = c; puestoA = v; dirA = d; lejos = pasos;
+                        }
+                    }
+                }
+                if (mata < 0) { reportar("tocarArbusto: no hay hierba con hueco"); return; }
+                moverHeroe(puestoA);
+                Dungeon.observe();
+                com.github.dachhack.sprout.FirstPerson.faceCell(mata);
+                celdaPrueba = mata;
+                reportar("tocarArbusto: mata=" + mata + " heroe=" + puestoA
+                    + " a " + lejos + " pasos (mira el centro y pregunta con verArbusto)");
+            } else if ("dentroDeLaHierba".equals(cmd)) {
+                // El caso que casi se rompe: parado DENTRO de una mata. Si
+                // la casilla del ojo tapase, cualquier toque devolveria la
+                // propia y no se podria caminar tocando -- que es lo que
+                // pasaba de verdad parado en una puerta.
+                int wH = com.github.dachhack.sprout.levels.Level.getWidth();
+                int mataH = -1;
+                for (int c = 0; c < Dungeon.level.map.length; c++) {
+                    if (Dungeon.level.map[c]
+                            == com.github.dachhack.sprout.levels.Terrain.HIGH_GRASS
+                        && com.github.dachhack.sprout.actors.Actor.findChar(c) == null) {
+                        mataH = c; break;
+                    }
+                }
+                if (mataH < 0) { reportar("dentroDeLaHierba: no hay"); return; }
+                moverHeroe(mataH);
+                Dungeon.observe();
+                com.watabou.noosa.Camera3D cH =
+                    com.github.dachhack.sprout.FirstPerson.camera();
+                StringBuilder sh = new StringBuilder();
+                boolean soloYo = true;
+                for (int k = 0; k <= 6; k++) {
+                    int celda = com.github.dachhack.sprout.FirstPerson.screenToCell(
+                        com.watabou.noosa.Game.width / 2f,
+                        com.watabou.noosa.Game.height * (0.62f - k * 0.015f));
+                    sh.append(celda).append(' ');
+                    if (celda >= 0 && celda != mataH) { soloYo = false; }
+                }
+                reportar("dentroDeLaHierba: heroe en la mata " + mataH
+                    + " terreno=" + Dungeon.level.map[mataH]
+                    + " barrido=[" + sh.toString().trim() + "]"
+                    + (soloYo ? "  ROTO: todo cae en su propia casilla"
+                              : "  BIEN: se puede tocar fuera"));
+            } else if ("verArbusto".equals(cmd)) {
+                // Se prueba cellFromRay a pelo, con las dos mascaras, para
+                // que el resultado no dependa de billboards ni de donde
+                // quedo el heroe: es la funcion que cambio y nada mas.
+                com.watabou.noosa.Camera3D c3 =
+                    com.github.dachhack.sprout.FirstPerson.camera();
+                int wV = com.github.dachhack.sprout.levels.Level.getWidth();
+                int filas = Dungeon.level.map.length / wV;
+                boolean[] vieja = new boolean[Dungeon.level.map.length];
+                boolean[] nueva = new boolean[Dungeon.level.map.length];
+                for (int i = 0; i < vieja.length; i++) {
+                    vieja[i] = com.github.dachhack.sprout.levels.Level.solid[i];
+                    nueva[i] = com.github.dachhack.sprout.levels.Level.solid[i]
+                        || com.github.dachhack.sprout.levels.Level.losBlocking[i];
+                }
+                StringBuilder sa = new StringBuilder(), sb = new StringBuilder();
+                for (int k = 0; k <= 8; k++) {
+                    float fy = 0.60f - k * 0.012f;
+                    float px = com.watabou.noosa.Game.width / 2f;
+                    float py = com.watabou.noosa.Game.height * fy;
+                    sa.append(com.github.dachhack.sprout.FirstPerson.cellFromRay(
+                        px, py, com.watabou.noosa.Game.width,
+                        com.watabou.noosa.Game.height, c3.fovY(), c3.aspect(),
+                        c3.eyeX, c3.eyeY, c3.eyeZ, c3.yaw, c3.pitch,
+                        wV, filas, vieja)).append(' ');
+                    sb.append(com.github.dachhack.sprout.FirstPerson.cellFromRay(
+                        px, py, com.watabou.noosa.Game.width,
+                        com.watabou.noosa.Game.height, c3.fovY(), c3.aspect(),
+                        c3.eyeX, c3.eyeY, c3.eyeZ, c3.yaw, c3.pitch,
+                        wV, filas, nueva)).append(' ');
+                }
+                // El terreno de la linea entre el heroe y la mata, para no
+                // tener que suponer que hay en medio.
+                StringBuilder linea = new StringBuilder();
+                int paso = celdaPrueba > Dungeon.hero.pos ? wV : -wV;
+                if (Math.abs(celdaPrueba - Dungeon.hero.pos) % wV != 0) {
+                    paso = celdaPrueba > Dungeon.hero.pos ? 1 : -1;
+                }
+                for (int c = Dungeon.hero.pos; ; c += paso) {
+                    linea.append(c).append(':')
+                         .append(Dungeon.level.map[c] ==
+                             com.github.dachhack.sprout.levels.Terrain.HIGH_GRASS
+                             ? "hierba" : String.valueOf(Dungeon.level.map[c]))
+                         .append(' ');
+                    if (c == celdaPrueba) { break; }
+                }
+                reportar("verArbusto: mata=" + celdaPrueba
+                    + " heroe=" + Dungeon.hero.pos
+                    + "\n   en la linea: " + linea.toString().trim()
+                    + "\n   solo SOLID (antes): " + sa.toString().trim()
+                    + "\n   + tapa vista (hoy): " + sb.toString().trim());
             } else if ("verEmisores".equals(cmd)) {
                 reportar("verEmisores: visibles="
                     + GameScene.emisoresPlanosVisibles() + " de "
@@ -850,6 +979,7 @@ public final class Diagnostico {
             reportar("orden " + cmd + " revento: " + t);
         }
     }
+
 
     private static int celdaPrueba = -1;
     private static int pisoGen = 0;
