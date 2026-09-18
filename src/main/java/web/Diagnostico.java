@@ -499,6 +499,15 @@ public final class Diagnostico {
                 reportar("morirme: piso " + Dungeon.depth
                     + " hp " + Dungeon.hero.HP);
                 Dungeon.hero.die(null);
+            } else if ("invertirX".equals(cmd)) {
+                com.github.dachhack.sprout.ShatteredPixelDungeon.invertX(
+                    !com.github.dachhack.sprout.ShatteredPixelDungeon.invertX());
+                reportar("invertirX ahora = "
+                    + com.github.dachhack.sprout.ShatteredPixelDungeon.invertX());
+            } else if ("ajustes".equals(cmd)) {
+                GameScene.show(
+                    new com.github.dachhack.sprout.windows.WndSettings(true));
+                reportar("ajustes abiertos");
             } else if ("curar".equals(cmd)) {
                 // Caerse hace daño de verdad; sin esto el heroe se muere a
                 // la tercera y la prueba de memoria se acaba antes de decir
