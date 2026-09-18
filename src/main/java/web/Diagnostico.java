@@ -662,6 +662,18 @@ public final class Diagnostico {
                 celdaPrueba = sal;
                 reportar("alLadoDeLaSalida: salida=" + sal + " heroe=" + puesto
                     + " terreno=" + Dungeon.level.map[sal]);
+            } else if ("verTuberia".equals(cmd)) {
+                // Se consulta APARTE de alLadoDeUnaTuberia: el estado que se
+                // lea en el mismo cuadro del teletransporte es el de antes
+                // de mover, porque los adornos se encienden en su propio
+                // update y eso ocurre al cuadro siguiente.
+                reportar("verTuberia: celda=" + celdaPrueba
+                    + " visible=" + (celdaPrueba >= 0
+                        && com.github.dachhack.sprout.Dungeon.visible[celdaPrueba])
+                    + " adornosVisibles="
+                    + com.github.dachhack.sprout.Adornos.visibles()
+                    + " de " + com.github.dachhack.sprout.Adornos.cuantos()
+                    + " | " + com.github.dachhack.sprout.Adornos.comoEsta(celdaPrueba));
             } else if ("verEmisores".equals(cmd)) {
                 reportar("verEmisores: visibles="
                     + GameScene.emisoresPlanosVisibles() + " de "
@@ -674,19 +686,35 @@ public final class Diagnostico {
                 // particulas en coordenadas planas.
                 int wT = com.github.dachhack.sprout.levels.Level.getWidth();
                 int tuberia = -1, puestoT = -1;
-                int[] ladosT = { wT, -wT, 1, -1, wT - 1, wT + 1 };
-                for (int c = 0; c < Dungeon.level.map.length && tuberia < 0; c++) {
+                // Lejos, no pegado: una gota a media celda de la cara llena
+                // la pantalla y no dice nada sobre si esta bien puesta.
+                // Ballistica no sirve para apuntar a una pared -- se para
+                // antes -- asi que se retrocede en linea recta desde la
+                // casilla de delante de la tuberia mientras se pueda.
+                int mejorD = 0;
+                int[] ladosT = { wT, -wT, 1, -1 };
+                for (int c = 0; c < Dungeon.level.map.length && mejorD < 5; c++) {
                     if (Dungeon.level.map[c]
                             != com.github.dachhack.sprout.levels.Terrain.WALL_DECO) {
                         continue;
                     }
                     for (int d : ladosT) {
-                        int v = c + d;
-                        if (v > 0 && v < Dungeon.level.map.length
-                            && com.github.dachhack.sprout.levels.Level.passable[v]
-                            && com.github.dachhack.sprout.actors.Actor.findChar(v) == null) {
-                            tuberia = c; puestoT = v; break;
+                        int frente = c + d;
+                        if (frente < 0 || frente >= Dungeon.level.map.length
+                            || !com.github.dachhack.sprout.levels.Level.passable[frente]) {
+                            continue;
                         }
+                        int v = frente, pasos = 1;
+                        while (pasos < 6) {
+                            int sig = v + d;
+                            if (sig < 0 || sig >= Dungeon.level.map.length
+                                || !com.github.dachhack.sprout.levels.Level.passable[sig]
+                                || com.github.dachhack.sprout.actors.Actor.findChar(sig) != null) {
+                                break;
+                            }
+                            v = sig; pasos++;
+                        }
+                        if (pasos > mejorD) { tuberia = c; puestoT = v; mejorD = pasos; }
                     }
                 }
                 if (tuberia < 0) { reportar("alLadoDeUnaTuberia: no hay"); return; }
@@ -703,7 +731,14 @@ public final class Diagnostico {
                 }
                 reportar("alLadoDeUnaTuberia: piso=" + Dungeon.depth
                     + " tuberia=" + tuberia + " heroe=" + puestoT
-                    + " tuberias en el nivel=" + cuantas);
+                    + " distancia=" + mejorD
+                    + " tuberias en el nivel=" + cuantas
+                    + " visibles=" + com.github.dachhack.sprout.Adornos.visibles()
+                    + " estado[" + tuberia + "]="
+                    + com.github.dachhack.sprout.Adornos.comoEsta(tuberia)
+                    + " adornos colocados="
+                    + com.github.dachhack.sprout.Adornos.colocados()
+                    + " (" + com.github.dachhack.sprout.Adornos.cuantos() + ")");
             } else if ("alLadoDeLaEntrada".equals(cmd)) {
                 int ent = Dungeon.level.entrance;
                 int w6 = com.github.dachhack.sprout.levels.Level.getWidth();
