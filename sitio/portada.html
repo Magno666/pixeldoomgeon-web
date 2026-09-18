@@ -86,6 +86,9 @@
   .cta:hover { filter: brightness(1.08); }
   .cta-2 { background: transparent; color: var(--stone-100); border: 1px solid var(--stone-700); }
   .cta-2:hover { background: var(--stone-800); filter: none; }
+  /* El sha va entero a proposito: quien lo quiera comprobar lo necesita
+     completo, y en pantalla chica parte por donde sea antes que salirse. */
+  .apk-nota code { font-size: .78em; word-break: break-all; opacity: .85; }
   .visualmente-oculto {
     position: absolute; width: 1px; height: 1px; overflow: hidden;
     clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
@@ -247,9 +250,18 @@
     <p class="lede-nota">El juego cuenta, de forma anónima, hasta qué piso llegas y de qué mueres. Nada más que eso: ni IPs, ni partidas, ni nada que diga quién eres. Lo necesito porque varios se quedaron en el piso 2 y no sé si es difícil, aburrido o que algo se rompe.</p>
     <div class="acciones">
       <a class="cta" href="juego/">Jugar en el navegador</a>
+      <a class="cta cta-2" href="apk/pixeldoomgeon-latest.apk"
+         download>Descargar el APK</a>
       <a class="cta cta-2" href="arena/">Pelear con los jefes</a>
       <a class="cta cta-2" href="demo/">Probar la demo 3D</a>
     </div>
+    <p class="lede-nota apk-nota">El APK son 3.4 MB, versión
+      <strong>0.4.3-fp33</strong>, para Android 5 en adelante. No está en
+      Google Play todavía, así que al instalarlo el teléfono va a avisarte
+      de que viene de fuera y vas a tener que darle permiso — es lo normal
+      con cualquier APK que no venga de la tienda. Está firmado con mi
+      llave; si sabes comprobarlo, el SHA-256 es
+      <code>0401c7a4fdfdad19c438ad199b4e48c712a05ddd8620814e7550b5e25ac9e073</code>.</p>
   </div>
 </header>
 
