@@ -103,8 +103,9 @@
   }
   .comentar textarea:focus { outline: 2px solid var(--water); outline-offset: 1px; }
   .lista-espera { margin: 2.6rem 0 1.2rem; }
+  .campo-apodo { flex: 0 1 11rem; }
   .campo-correo {
-    flex: 1 1 18rem; min-width: 0;
+    flex: 1 1 15rem; min-width: 0;
     background: var(--stone-900); color: var(--stone-100);
     border: 1px solid var(--stone-700); border-radius: 8px;
     padding: .7rem .9rem; font: inherit;
@@ -256,7 +257,7 @@
     <p class="lede">Estoy metiendo Sprouted Pixel Dungeon en primera persona. Mismo juego, otra cámara. Ya se puede jugar entero en el navegador: dime qué se siente mal.</p>
     <p class="lede-nota">Hecho con ayuda de IA: buena parte del código y de los textos salieron de ahí. Lo digo aquí para no tener que decirlo cada vez.</p>
     <p class="lede-nota">El juego cuenta, de forma anónima, hasta qué piso llegas, de qué mueres y a cuántos cuadros te corre. Nada más que eso: ni IPs, ni partidas, ni nada que diga quién eres. Lo necesito porque varios se quedaron en el piso 2 y no sé si es difícil, aburrido o que algo se rompe.</p>
-    <p class="lede-nota">Lo único que puede identificarte es el correo de la lista de espera de abajo, y ése lo dejas tú si quieres. No va con lo demás, no se lo paso a nadie, y si me escribes lo borro.</p>
+    <p class="lede-nota">Lo único que puede identificarte es el apodo y el correo del registro de abajo, y ésos los dejas tú si quieres. No van con lo demás, no se los paso a nadie, y si me escribes los borro.</p>
     <div class="acciones">
       <a class="cta" href="juego/">Jugar en el navegador</a>
       <a class="cta cta-2" href="apk/pixeldoomgeon-latest.apk"
@@ -298,13 +299,20 @@
       <p>Varios héroes en la misma mazmorra, contra los bichos y entre
         ustedes, en tiempo real. Todavía no está: hay una prueba que ya
         corre con dos héroes a la vez y falta la parte de red.</p>
-      <p>Si quieres entrar antes que nadie cuando esté, déjame tu correo.
-        <strong>No es una cuenta</strong> — no hay contraseña ni nada que
-        recordar. Es una lista, y cuando abra te mando el acceso.</p>
+      <p>Si quieres entrar antes que nadie cuando esté, déjame un apodo y
+        tu correo. <strong>No es una cuenta</strong> — no hay contraseña ni
+        nada que recordar. El apodo es el nombre con el que te van a ver
+        los demás, así que no puede repetirse.</p>
+      <p><strong>Y es opcional.</strong> El juego se puede jugar como hasta
+        ahora sin dejar nada: entras, juegas, y no sé quién eres.</p>
 
       <form id="lista" class="comentar">
+        <label class="visualmente-oculto" for="apodo">Tu apodo</label>
         <label class="visualmente-oculto" for="correo">Tu correo</label>
         <div class="fila">
+          <input id="apodo" name="apodo" type="text" maxlength="16"
+            autocomplete="nickname" placeholder="Tu apodo"
+            class="campo-correo campo-apodo">
           <input id="correo" name="correo" type="email" maxlength="120"
             autocomplete="email" placeholder="tucorreo@ejemplo.com"
             class="campo-correo">
@@ -464,16 +472,20 @@
     f.addEventListener('submit', function (e) {
       e.preventDefault();
       var correo = document.getElementById('correo').value.trim();
-      if (!correo) { decir('Escribe tu correo primero.', true); return; }
+      var apodo = document.getElementById('apodo').value.trim();
+      if (!apodo) { decir('Ponle un apodo.', true); return; }
+      if (!correo) { decir('Escribe tu correo también.', true); return; }
       decir('Apuntando…');
       fetch('/api/lista', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo: correo, de: 'web' })
+        body: JSON.stringify({ correo: correo, apodo: apodo, de: 'web' })
       }).then(function (r) { return r.json(); }).then(function (d) {
         if (d.error) { decir(d.error, true); return; }
-        decir(d.ya ? 'Ya estabas en la lista. Van ' + d.cuantos + '.'
-                   : 'Listo. Van ' + d.cuantos + ' y te aviso cuando abra.');
+        decir(d.ya
+          ? 'Ya estabas apuntado como ' + d.apodo + '. Van ' + d.cuantos + '.'
+          : 'Listo, ' + d.apodo + '. Van ' + d.cuantos
+            + ' y te aviso cuando abra.');
         f.reset();
       }).catch(function () {
         decir('No se pudo. Intenta en un momento.', true);
