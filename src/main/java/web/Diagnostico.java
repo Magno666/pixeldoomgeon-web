@@ -719,6 +719,70 @@ public final class Diagnostico {
                 celdaPrueba = mata;
                 reportar("tocarArbusto: mata=" + mata + " heroe=" + puestoA
                     + " a " + lejos + " pasos (mira el centro y pregunta con verArbusto)");
+            } else if ("enderezarToque".equals(cmd)) {
+                // Pide un camino TOCANDO una casilla al norte y reporta el
+                // yaw antes y despues. Tiene que acabar mirando al norte (0)
+                // aunque se empiece mirando a otro lado.
+                int wE = com.github.dachhack.sprout.levels.Level.getWidth();
+                int destino = -1;
+                for (int k = 3; k >= 1 && destino < 0; k--) {
+                    int c = Dungeon.hero.pos - wE * k;
+                    if (c > 0 && com.github.dachhack.sprout.levels.Level.passable[c]
+                        && com.github.dachhack.sprout.actors.Actor.findChar(c) == null) {
+                        destino = c;
+                    }
+                }
+                if (destino < 0) { reportar("enderezarToque: sin hueco al norte"); return; }
+                com.github.dachhack.sprout.FirstPerson.yaw = 90f;   // mirando al oeste
+                com.github.dachhack.sprout.FirstPerson.caminoPorToque();
+                GameScene.handleCell(destino);
+                reportar("enderezarToque: heroe=" + Dungeon.hero.pos
+                    + " destino=" + destino + " yaw de salida=90 (oeste)");
+            } else if ("enderezarMando".equals(cmd)) {
+                int wM = com.github.dachhack.sprout.levels.Level.getWidth();
+                int destinoM = -1;
+                for (int k = 3; k >= 1 && destinoM < 0; k--) {
+                    int c = Dungeon.hero.pos - wM * k;
+                    if (c > 0 && com.github.dachhack.sprout.levels.Level.passable[c]
+                        && com.github.dachhack.sprout.actors.Actor.findChar(c) == null) {
+                        destinoM = c;
+                    }
+                }
+                if (destinoM < 0) { reportar("enderezarMando: sin hueco al norte"); return; }
+                com.github.dachhack.sprout.FirstPerson.yaw = 90f;
+                com.github.dachhack.sprout.FirstPerson.caminoPorMando();
+                GameScene.handleCell(destinoM);
+                reportar("enderezarMando: heroe=" + Dungeon.hero.pos
+                    + " destino=" + destinoM + " yaw de salida=90 (oeste)");
+            } else if ("enderezarApagado".equals(cmd)) {
+                // La casilla de Ajustes de verdad lo apaga: mismo caso del
+                // toque pero con la preferencia en false.
+                com.github.dachhack.sprout.ShatteredPixelDungeon.enderezar(false);
+                int wZ = com.github.dachhack.sprout.levels.Level.getWidth();
+                int destZ = -1;
+                for (int k = 3; k >= 1 && destZ < 0; k--) {
+                    int c = Dungeon.hero.pos - wZ * k;
+                    if (c > 0 && com.github.dachhack.sprout.levels.Level.passable[c]
+                        && com.github.dachhack.sprout.actors.Actor.findChar(c) == null) {
+                        destZ = c;
+                    }
+                }
+                if (destZ < 0) { reportar("enderezarApagado: sin hueco"); return; }
+                com.github.dachhack.sprout.FirstPerson.yaw = 90f;
+                com.github.dachhack.sprout.FirstPerson.caminoPorToque();
+                GameScene.handleCell(destZ);
+                reportar("enderezarApagado: ajuste="
+                    + com.github.dachhack.sprout.FirstPerson.enderezarAlCaminar
+                    + " destino=" + destZ + " yaw de salida=90");
+            } else if ("enderezarEncendido".equals(cmd)) {
+                com.github.dachhack.sprout.ShatteredPixelDungeon.enderezar(true);
+                reportar("enderezarEncendido: ajuste="
+                    + com.github.dachhack.sprout.FirstPerson.enderezarAlCaminar);
+            } else if ("verYaw".equals(cmd)) {
+                reportar("verYaw: yaw=" + (int) com.github.dachhack.sprout.FirstPerson.yaw
+                    + " heroe=" + Dungeon.hero.pos
+                    + " ajuste enderezar="
+                    + com.github.dachhack.sprout.FirstPerson.enderezarAlCaminar);
             } else if ("bichosEnElMapa".equals(cmd)) {
                 // Cuantos bichos ve el heroe y cuantos puntos pinta el mapa.
                 // Tienen que coincidir: ni de mas (seria hacer trampa) ni
