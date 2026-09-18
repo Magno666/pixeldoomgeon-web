@@ -22,6 +22,16 @@ public final class Progreso {
     private static boolean puesto;
 
     public static void revisar() {
+        // En modo diagnostico no se manda NADA.
+        //
+        // Cada corrida de una prueba automatica abre un navegador limpio,
+        // que se inventa un id de instalacion nuevo y lo registra como si
+        // fuera una persona. Doce pruebas son doce jugadores que no
+        // existen, y el dato deja de servir justo para lo que se hizo.
+        // Ya paso dos veces y las dos hubo que limpiar a mano.
+        if (enDiagnostico()) {
+            return;
+        }
         if (!puesto) {
             puesto = true;
             Telemetria.plataforma = "web";
@@ -39,6 +49,9 @@ public final class Progreso {
     public static void reiniciar() {
         Telemetria.reiniciar();
     }
+
+    @JSBody(script = "return /[?&]diag\\b/.test(location.search);")
+    private static native boolean enDiagnostico();
 
     @JSBody(params = "json", script =
         // keepalive para que el aviso de muerte salga aunque la pestaña se
