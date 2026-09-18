@@ -719,6 +719,51 @@ public final class Diagnostico {
                 celdaPrueba = mata;
                 reportar("tocarArbusto: mata=" + mata + " heroe=" + puestoA
                     + " a " + lejos + " pasos (mira el centro y pregunta con verArbusto)");
+            } else if ("bichosEnElMapa".equals(cmd)) {
+                // Cuantos bichos ve el heroe y cuantos puntos pinta el mapa.
+                // Tienen que coincidir: ni de mas (seria hacer trampa) ni
+                // de menos (seria no contestar a lo que pidieron).
+                // Traer bichos al lado: sin ninguno a la vista la prueba
+                // pasa sola sin comprobar nada.
+                int wB = com.github.dachhack.sprout.levels.Level.getWidth();
+                int[] ladosB = { -wB, wB, -1, 1, -wB-1, -wB+1, wB-1, wB+1 };
+                int traidos = 0;
+                for (com.github.dachhack.sprout.actors.mobs.Mob m
+                        : Dungeon.level.mobs.toArray(
+                            new com.github.dachhack.sprout.actors.mobs.Mob[0])) {
+                    if (traidos >= 3) { break; }
+                    for (int d : ladosB) {
+                        int c = Dungeon.hero.pos + d;
+                        if (c > 0 && c < Dungeon.level.map.length
+                            && com.github.dachhack.sprout.levels.Level.passable[c]
+                            && com.github.dachhack.sprout.actors.Actor.findChar(c) == null) {
+                            com.github.dachhack.sprout.actors.Actor.freeCell(m.pos);
+                            m.pos = c;
+                            com.github.dachhack.sprout.actors.Actor.occupyCell(m);
+                            if (m.sprite != null) { m.sprite.place(c); }
+                            traidos++;
+                            break;
+                        }
+                    }
+                }
+                Dungeon.observe();
+                com.github.dachhack.sprout.Minimap.update();
+
+                int aLaVista = 0;
+                for (com.github.dachhack.sprout.actors.mobs.Mob m
+                        : Dungeon.level.mobs) {
+                    if (m != null && m.pos >= 0
+                            && m.pos < Dungeon.level.map.length
+                            && Dungeon.visible[m.pos]) {
+                        aLaVista++;
+                    }
+                }
+                reportar("bichosEnElMapa: traidos=" + traidos
+                    + " a la vista=" + aLaVista
+                    + " puntos pintados=" + com.github.dachhack.sprout.Minimap.puntosBicho()
+                    + " bichos en el nivel=" + Dungeon.level.mobs.size()
+                    + (aLaVista == com.github.dachhack.sprout.Minimap.puntosBicho()
+                        ? "  CUADRA" : "  NO CUADRA"));
             } else if ("dentroDeLaHierba".equals(cmd)) {
                 // El caso que casi se rompe: parado DENTRO de una mata. Si
                 // la casilla del ojo tapase, cualquier toque devolveria la
