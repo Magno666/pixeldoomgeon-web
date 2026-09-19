@@ -920,6 +920,32 @@ public final class Diagnostico {
                 com.github.dachhack.sprout.ShatteredPixelDungeon.punteroLibre(false);
                 reportar("punteroPreso: libre="
                     + com.github.dachhack.sprout.FirstPersonControls.punteroLibre);
+            } else if ("verAtasco".equals(cmd)) {
+                // Para el cuelgue de la arena: la ruedita gira, los turnos
+                // corren y no se puede ni abrir la mochila. Eso es
+                // hero.ready en false para siempre, asi que hay que ver
+                // QUIEN se queda con el turno.
+                StringBuilder sb = new StringBuilder();
+                sb.append("ready=").append(Dungeon.hero.ready)
+                  .append(" accion=").append(Dungeon.hero.curAction == null
+                      ? "null" : Dungeon.hero.curAction.getClass().getSimpleName())
+                  .append(" paralizado=").append(Dungeon.hero.paralysed)
+                  .append(" reloj=").append(
+                      com.github.dachhack.sprout.actors.Actor.reloj())
+                  .append(" actual=").append(quienActua())
+                  .append(" bichos=").append(Dungeon.level.mobs.size())
+                  .append(" velocidad=").append(Dungeon.hero.speed())
+                  .append(" 1/vel=").append(1f / Dungeon.hero.speed())
+                  .append(" tiempoHeroe=").append(tiempoDelHeroe());
+                int enMovimiento = 0;
+                for (com.github.dachhack.sprout.actors.mobs.Mob m
+                        : Dungeon.level.mobs) {
+                    if (m.sprite != null && m.sprite.isMoving) { enMovimiento++; }
+                }
+                sb.append(" sprites moviendose=").append(enMovimiento)
+                  .append(" heroe moviendose=").append(
+                      Dungeon.hero.sprite != null && Dungeon.hero.sprite.isMoving);
+                reportar("verAtasco: " + sb);
             } else if ("verEmisores".equals(cmd)) {
                 reportar("verEmisores: visibles="
                     + GameScene.emisoresPlanosVisibles() + " de "
@@ -1097,6 +1123,27 @@ public final class Diagnostico {
         }
     }
 
+
+    /** Quien tiene el turno, con su casilla si es una criatura. */
+    private static String quienActua() {
+        com.github.dachhack.sprout.actors.Actor a =
+            com.github.dachhack.sprout.actors.Actor.enTurno();
+        if (a == null) { return "nadie"; }
+        String n = a.getClass().getSimpleName();
+        if (a instanceof com.github.dachhack.sprout.actors.Char) {
+            n += "@" + ((com.github.dachhack.sprout.actors.Char) a).pos;
+        }
+        return n;
+    }
+
+    /** El reloj del propio heroe. Con prisa extrema puede dejar de avanzar
+     *  por precision de coma flotante, y entonces nadie mas alcanza turno. */
+    private static String tiempoDelHeroe() {
+        com.github.dachhack.sprout.actors.Actor a =
+            com.github.dachhack.sprout.actors.Actor.enTurno();
+        return a == null ? "?" : String.valueOf(
+            com.github.dachhack.sprout.actors.Actor.reloj());
+    }
 
     private static int celdaPrueba = -1;
     private static int pisoGen = 0;
