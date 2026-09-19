@@ -132,6 +132,13 @@
     margin-bottom: .35rem; text-transform: uppercase; letter-spacing: .06em;
   }
   .comentarios p { margin: 0; line-height: 1.65; white-space: pre-wrap; }
+  /* La respuesta se sangra y lleva una barra al lado: tiene que leerse
+     como contestación a ese comentario y no como uno nuevo. */
+  .comentarios .respuesta {
+    margin: .8rem 0 0 0; padding: .6rem 0 .1rem .9rem;
+    border-left: 2px solid var(--gold, #E0A83A);
+  }
+  .comentarios .respuesta .meta { color: var(--gold, #E0A83A); }
 
   .lede-nota {
     color: var(--stone-400, #8a938c); font-size: .88rem; line-height: 1.6;
@@ -551,6 +558,22 @@
         txt.textContent = c.texto;
         art.appendChild(meta);
         art.appendChild(txt);
+        // La respuesta la escribo yo en el servidor. Va con textContent
+        // igual que todo lo demas: ni lo que escribe la gente ni lo que
+        // escribo yo pasa nunca por innerHTML.
+        if (c.respuesta) {
+          var resp = document.createElement('div');
+          resp.className = 'respuesta';
+          var quien = document.createElement('span');
+          quien.className = 'meta';
+          quien.textContent = 'Respuesta'
+            + (c.respondido ? ' · ' + hace(c.respondido) : '');
+          var rt = document.createElement('p');
+          rt.textContent = c.respuesta;
+          resp.appendChild(quien);
+          resp.appendChild(rt);
+          art.appendChild(resp);
+        }
         lista.appendChild(art);
       });
     }
