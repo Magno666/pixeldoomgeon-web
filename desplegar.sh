@@ -15,9 +15,15 @@ JS="$RAIZ/build/generated/teavm/js/juego.js"
 [ -f "$JS" ] || { echo "no hay juego.js -- corre ./gradlew generateJavaScript"; exit 1; }
 [ -d "$DESTINO" ] || { echo "no existe $DESTINO"; exit 1; }
 
-BUILD=$(grep -oE 'FP build v[0-9]+' \
-  /root/proyectos/sprouted-build/app/src/main/java/com/github/dachhack/sprout/FirstPerson.java \
-  | head -1 | tr -d ' ' | tr '[:upper:]' '[:lower:]')
+# El sello sale de web/Version.java, que es la version de verdad de esta
+# build. Antes se sacaba con grep de la cadena "FP build vNN" de
+# FirstPerson.java, y eso se rompio de dos maneras a la vez: la cadena paso
+# a construirse en tiempo de ejecucion, y el grep acabo encontrando el
+# numero viejo dentro de un COMENTARIO. Un sello de cache que miente sirve
+# para lo contrario de lo que existe.
+BUILD=$(grep -oE 'NOMBRE *= *"[^"]+"' src/main/java/web/Version.java \
+  | head -1 | sed 's/.*"\(.*\)"/\1/')
+[ -n "$BUILD" ] || { echo "no pude leer NOMBRE de web/Version.java"; exit 1; }
 SELLO="${BUILD:-build}-$(date +%Y%m%d%H%M)"
 
 # El sello que ya estaba servido. Hay que leerlo AHORA: la copia de
@@ -49,7 +55,13 @@ cp "$RAIZ/sitio/icono/"*.png "$RAIZ_SITIO/icono/"
 # haber jugado, y son seis megas que no vale la pena duplicar.
 mkdir -p "$DESTINO/../arena"
 cp "$RAIZ/sitio/arena/index.html" "$DESTINO/../arena/index.html"
-if [ -f "$DESTINO/juego.js" ] && cmp -s "$JS" "$DESTINO/juego.js" && [ -n "$VIEJO" ]; then
+# Se conserva el sello solo si el juego.js es identico Y el sello es de
+# ESTA version. Sin la segunda condicion, un cambio que no altera el
+# bundle (subir el numero de version, por ejemplo) dejaba servido un sello
+# con el nombre de la version anterior: el fichero correcto con la
+# etiqueta equivocada.
+if [ -f "$DESTINO/juego.js" ] && cmp -s "$JS" "$DESTINO/juego.js" \
+   && [ -n "$VIEJO" ] && [ "${VIEJO%-*}" = "$BUILD" ]; then
   SELLO="$VIEJO"
   echo "juego.js sin cambios -- se conserva el sello $SELLO"
 else
